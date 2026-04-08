@@ -260,14 +260,25 @@
 
     <script>
         // ============================================
-        // GATE PAGE - JUST REDIRECTION
+        // GATE PAGE - مع مسارات مجلد public
         // ============================================
         
         let selectedPortal = null;
         
+        // تحديد ما إذا كنا على GitHub Pages أم لا
+        const isGitHubPages = window.location.hostname.includes('github.io');
+        
+        // تحديد المسار الأساسي (base path)
+        const basePath = isGitHubPages ? '/Traxa-System' : '';
+        
+        console.log('🌐 Running on:', isGitHubPages ? 'GitHub Pages' : 'Local');
+        console.log('📁 Base path:', basePath);
+        
         // Generate floating particles
         function createParticles() {
             const particlesContainer = document.getElementById('particles');
+            if (!particlesContainer) return;
+            
             for (let i = 0; i < 50; i++) {
                 const particle = document.createElement('div');
                 particle.className = 'particle';
@@ -315,9 +326,19 @@
         
         continueBtn.addEventListener('click', () => {
             if (selectedPortal === 'doctor') {
-                window.location.href = '/traxa_doctor_management.html';
+                // ✅ المسار الصحيح لصفحة الدكتور (في مجلد public)
+                if (isGitHubPages) {
+                    window.location.href = '/Traxa-System/public/traxa_doctor_management.html';
+                } else {
+                    window.location.href = '/traxa_doctor_management.html';
+                }
             } else if (selectedPortal === 'student') {
-                window.location.href = '/students.html';
+                // ✅ المسار الصحيح لصفحة الطالب (في مجلد public)
+                if (isGitHubPages) {
+                    window.location.href = '/Traxa-System/public/students.html';
+                } else {
+                    window.location.href = '/students.html';
+                }
             }
         });
         
@@ -330,7 +351,6 @@
             }
         });
         
-        // Add hover effect info
         console.log('🎯 Gate page ready - Choose Doctor (1) or Student (2)');
     </script>
 </body>
