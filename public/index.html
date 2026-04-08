@@ -1,0 +1,2185 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Attendance System - Admin Dashboard</title>
+  <!-- مكتبات QR Code و PDF -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.5.28/jspdf.plugin.autotable.min.js"></script>
+  <!-- Face API library -->
+  <script src="https://cdn.jsdelivr.net/npm/face-api.js@0.22.2/dist/face-api.min.js"></script>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script>
+    tailwind.config = {
+      theme: {
+        extend: {}
+      },
+      plugins: []
+    }
+  </script>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css"/>
+  <style>
+    @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap');
+    
+    * {
+        margin: 0;
+        padding: 0;
+        box-sizing: border-box;
+    }
+    
+    body {
+        font-family: 'Inter', sans-serif;
+        transition: background-color 0.3s ease, color 0.3s ease;
+        min-height: 100vh;
+        font-size: 14px;
+    }
+    
+    /* ============================================
+       LIGHT MODE (Default)
+       ============================================ */
+    body.light-mode {
+        --bg-primary: #f8fafc;
+        --bg-secondary: #ffffff;
+        --bg-card: #ffffff;
+        --bg-sidebar: #f1f5f9;
+        --text-primary: #0f172a;
+        --text-secondary: #475569;
+        --text-muted: #64748b;
+        --border-color: #e2e8f0;
+        --sidebar-border: #e2e8f0;
+        --card-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05), 0 2px 4px -1px rgba(0, 0, 0, 0.03);
+        --hover-bg: #f1f5f9;
+        --table-row-bg: #ffffff;
+        --table-row-hover: #f8fafc;
+        --input-bg: #ffffff;
+        --input-border: #e2e8f0;
+        --input-focus: #4f46e5;
+        background: linear-gradient(135deg, #f8fafc 0%, #e2e8f0 100%);
+        color: #0f172a;
+    }
+    
+    /* ============================================
+       DARK MODE
+       ============================================ */
+    body.dark-mode {
+        --bg-primary: #0f172a;
+        --bg-secondary: #1e293b;
+        --bg-card: #1e293b;
+        --bg-sidebar: #0f172a;
+        --text-primary: #f1f5f9;
+        --text-secondary: #cbd5e1;
+        --text-muted: #94a3b8;
+        --border-color: #334155;
+        --sidebar-border: #1e293b;
+        --card-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.3);
+        --hover-bg: #334155;
+        --table-row-bg: #1e293b;
+        --table-row-hover: #334155;
+        --input-bg: #1e293b;
+        --input-border: #475569;
+        --input-focus: #818cf8;
+        background: linear-gradient(135deg, #0f172a 0%, #1e1b4b 100%);
+        color: #f1f5f9;
+    }
+    
+    /* Apply CSS Variables */
+    body {
+        background: var(--bg-primary);
+        color: var(--text-primary);
+    }
+    
+    /* Login Screen */
+    .login-container {
+        background: var(--bg-card);
+        backdrop-filter: blur(10px);
+        border: 1px solid var(--border-color);
+        border-radius: 2rem;
+        box-shadow: var(--card-shadow);
+    }
+    
+    .btn-gradient {
+        background: linear-gradient(90deg, #4f46e5, #7c3aed);
+        transition: all 0.3s;
+        border-radius: 14px;
+        color: white;
+    }
+    
+    .btn-gradient:hover {
+        background: linear-gradient(90deg, #4338ca, #6d28d9);
+        transform: translateY(-2px);
+        box-shadow: 0 5px 15px rgba(79, 70, 229, 0.4);
+    }
+    
+    /* Sidebar */
+    .sidebar {
+        background: var(--bg-sidebar);
+        width: 280px;
+        box-shadow: 4px 0 10px rgba(0, 0, 0, 0.1);
+        border-right: 1px solid var(--sidebar-border);
+    }
+    
+    .nav-btn {
+        transition: all 0.3s ease;
+        border-radius: 14px;
+        font-weight: 500;
+        position: relative;
+        overflow: hidden;
+        color: var(--text-secondary);
+    }
+    
+    .nav-btn:hover {
+        background: rgba(79, 70, 229, 0.15);
+        transform: translateX(5px);
+        color: var(--text-primary);
+    }
+    
+    .nav-btn.active {
+        background: linear-gradient(90deg, rgba(79, 70, 229, 0.2), rgba(124, 58, 237, 0.15));
+        border-left: 4px solid #4f46e5;
+        box-shadow: 0 4px 12px rgba(79, 70, 229, 0.2);
+        color: #4f46e5;
+    }
+    
+    .nav-btn i {
+        color: #4f46e5;
+    }
+    
+    /* Cards */
+    .card {
+        transition: all 0.3s ease;
+        backdrop-filter: blur(10px);
+        background: var(--bg-card);
+        border: 1px solid var(--border-color);
+        border-radius: 24px;
+        padding: 20px;
+    }
+    
+    .card:hover {
+        transform: translateY(-5px);
+        box-shadow: var(--card-shadow);
+        border-color: #4f46e5;
+    }
+    
+    /* Report Cards */
+    .report-card {
+        background: linear-gradient(135deg, #4f46e5, #7c3aed);
+        border-radius: 24px;
+        padding: 32px;
+        text-align: center;
+        box-shadow: 0 15px 30px -12px rgba(0, 0, 0, 0.3);
+        transition: all 0.3s ease;
+        border: 1px solid rgba(255, 255, 255, 0.1);
+        cursor: pointer;
+        color: white;
+    }
+    
+    .report-card:hover {
+        transform: translateY(-6px) scale(1.02);
+        box-shadow: 0 25px 40px -12px rgba(79, 70, 229, 0.5);
+    }
+    
+    .report-card i {
+        font-size: 3rem;
+        margin-bottom: 1rem;
+    }
+    
+    .report-card h3 {
+        font-size: 1.5rem;
+        font-weight: 700;
+        margin-bottom: 0.5rem;
+    }
+    
+    .report-card p {
+        font-size: 0.875rem;
+        opacity: 0.9;
+    }
+    
+    /* Management Cards */
+    .management-card {
+        background: linear-gradient(135deg, #4f46e5, #7c3aed);
+        border-radius: 24px;
+        padding: 32px;
+        text-align: center;
+        box-shadow: 0 15px 30px -12px rgba(0, 0, 0, 0.3);
+        transition: all 0.3s ease;
+        border: 1px solid rgba(255, 255, 255, 0.1);
+        cursor: pointer;
+        color: white;
+    }
+    
+    .management-card:hover {
+        transform: translateY(-6px) scale(1.02);
+        box-shadow: 0 25px 40px -12px rgba(79, 70, 229, 0.5);
+    }
+    
+    .management-card i {
+        font-size: 3rem;
+        margin-bottom: 1rem;
+    }
+    
+    .management-card h3 {
+        font-size: 1.5rem;
+        font-weight: 700;
+    }
+    
+    /* Table Container */
+    .table-container {
+        background: var(--bg-card);
+        backdrop-filter: blur(10px);
+        border-radius: 24px;
+        padding: 24px;
+        border: 1px solid var(--border-color);
+        box-shadow: var(--card-shadow);
+        transition: all 0.3s ease;
+    }
+    
+    .table-container:hover {
+        border-color: #4f46e5;
+    }
+    
+    /* Tables */
+    table {
+        width: 100%;
+        border-collapse: separate;
+        border-spacing: 0 8px;
+    }
+    
+    thead tr {
+        background: linear-gradient(90deg, #4f46e5, #7c3aed);
+        border-radius: 16px !important;
+        overflow: hidden;
+    }
+    
+    th {
+        padding: 16px;
+        text-align: left;
+        font-weight: 600;
+        color: white;
+        font-size: 0.85rem;
+        letter-spacing: 0.3px;
+        text-transform: uppercase;
+    }
+    
+    th:first-child {
+        border-top-left-radius: 16px;
+        border-bottom-left-radius: 16px;
+    }
+    
+    th:last-child {
+        border-top-right-radius: 16px;
+        border-bottom-right-radius: 16px;
+    }
+    
+    td {
+        padding: 16px;
+        background: var(--table-row-bg);
+        border-bottom: none;
+        border-radius: 12px !important;
+        transition: all 0.2s ease;
+        color: var(--text-secondary);
+    }
+    
+    tr:hover td {
+        background: var(--table-row-hover);
+        transform: scale(1.01);
+        box-shadow: 0 4px 12px rgba(79, 70, 229, 0.15);
+    }
+    
+    /* Form Elements */
+    input, select, textarea {
+        background: var(--input-bg);
+        border: 1px solid var(--input-border);
+        color: var(--text-primary);
+        border-radius: 14px;
+        padding: 12px 16px;
+        font-size: 0.95rem;
+        transition: all 0.2s ease;
+    }
+    
+    input:focus, select:focus, textarea:focus {
+        border-color: var(--input-focus);
+        outline: none;
+        box-shadow: 0 0 0 3px rgba(79, 70, 229, 0.2);
+    }
+    
+    select option {
+        background-color: var(--input-bg);
+        color: var(--text-primary);
+        padding: 12px;
+    }
+    
+    /* Buttons */
+    .add-btn, .edit-btn, .delete-btn, .permissions-btn {
+        transition: all 0.2s ease;
+        font-size: 14px;
+        padding: 10px 20px;
+        border-radius: 12px;
+        font-weight: 600;
+    }
+    
+    .add-btn {
+        background: linear-gradient(90deg, #4f46e5, #7c3aed);
+        color: white;
+    }
+    
+    .add-btn:hover:not(:disabled) {
+        background: linear-gradient(90deg, #4338ca, #6d28d9);
+        transform: translateY(-2px);
+        box-shadow: 0 4px 12px rgba(79, 70, 229, 0.3);
+    }
+    
+    .add-btn:disabled {
+        opacity: 0.5;
+        cursor: not-allowed;
+    }
+    
+    .edit-btn {
+        background-color: rgba(234, 179, 8, 0.15);
+        color: #fbbf24;
+        border: 1px solid rgba(234, 179, 8, 0.3);
+    }
+    
+    .edit-btn:hover:not(:disabled) {
+        background-color: rgba(234, 179, 8, 0.25);
+        border-color: #fbbf24;
+        transform: translateY(-1px);
+    }
+    
+    .delete-btn {
+        background-color: rgba(239, 68, 68, 0.15);
+        color: #f87171;
+        border: 1px solid rgba(239, 68, 68, 0.3);
+    }
+    
+    .delete-btn:hover:not(:disabled) {
+        background-color: rgba(239, 68, 68, 0.25);
+        border-color: #f87171;
+        transform: translateY(-1px);
+    }
+    
+    .permissions-btn {
+        background-color: rgba(20, 184, 166, 0.15);
+        color: #2dd4bf;
+        border: 1px solid rgba(20, 184, 166, 0.3);
+    }
+    
+    .permissions-btn:hover {
+        background-color: rgba(20, 184, 166, 0.25);
+        border-color: #2dd4bf;
+        transform: translateY(-1px);
+    }
+    
+    /* Badges */
+    .badge {
+        padding: 4px 12px;
+        border-radius: 20px;
+        font-size: 12px;
+        font-weight: 600;
+    }
+    
+    .badge-pending {
+        background: rgba(245, 158, 11, 0.2);
+        color: #f59e0b;
+    }
+    
+    .badge-confirmed {
+        background: rgba(16, 185, 129, 0.2);
+        color: #10b981;
+    }
+    
+    .badge-rejected {
+        background: rgba(239, 68, 68, 0.2);
+        color: #ef4444;
+    }
+    
+    /* Student Cards */
+    .student-card {
+        background: var(--bg-card);
+        backdrop-filter: blur(10px);
+        border: 1px solid var(--border-color);
+        border-radius: 16px;
+        padding: 16px;
+        transition: all 0.3s;
+    }
+    
+    .student-card:hover {
+        transform: translateY(-2px);
+        border-color: #4f46e5;
+    }
+    
+    .student-card.pending {
+        border-left: 4px solid #f59e0b;
+    }
+    
+    .student-card.confirmed {
+        border-left: 4px solid #10b981;
+    }
+    
+    .student-card.rejected {
+        border-left: 4px solid #ef4444;
+        opacity: 0.7;
+    }
+    
+    /* Toast */
+    .toast {
+        animation: slideIn 0.3s ease forwards;
+        border-radius: 16px;
+        background: var(--bg-card);
+        border: 1px solid var(--border-color);
+        color: var(--text-primary);
+    }
+    
+    @keyframes slideIn {
+        from {
+            transform: translateX(100%);
+            opacity: 0;
+        }
+        to {
+            transform: translateX(0);
+            opacity: 1;
+        }
+    }
+    
+    /* Spinner */
+    .spinner {
+        border: 4px solid rgba(79, 70, 229, 0.2);
+        border-left-color: #4f46e5;
+        border-radius: 50%;
+        width: 50px;
+        height: 50px;
+        animation: spin 1s linear infinite;
+    }
+    
+    @keyframes spin {
+        to { transform: rotate(360deg); }
+    }
+    
+    /* Switch Toggle for Dark/Light Mode */
+    .theme-switch {
+        position: relative;
+        display: inline-block;
+        width: 60px;
+        height: 30px;
+        flex-shrink: 0;
+    }
+    
+    .theme-switch input {
+        opacity: 0;
+        width: 0;
+        height: 0;
+    }
+    
+    .theme-slider {
+        position: absolute;
+        cursor: pointer;
+        top: 0;
+        left: 0;
+        right: 0;
+        bottom: 0;
+        background-color: #334155;
+        transition: .4s;
+        border-radius: 34px;
+    }
+    
+    .theme-slider:before {
+        position: absolute;
+        content: "";
+        height: 22px;
+        width: 22px;
+        left: 4px;
+        bottom: 4px;
+        background-color: white;
+        transition: .4s;
+        border-radius: 50%;
+    }
+    
+    input:checked + .theme-slider {
+        background-color: #4f46e5;
+    }
+    
+    input:checked + .theme-slider:before {
+        transform: translateX(30px);
+    }
+    
+    /* Switch Toggle for other toggles */
+    .switch {
+        position: relative;
+        display: inline-block;
+        width: 60px;
+        height: 30px;
+        flex-shrink: 0;
+    }
+    
+    .switch input {
+        opacity: 0;
+        width: 0;
+        height: 0;
+    }
+    
+    .slider {
+        position: absolute;
+        cursor: pointer;
+        top: 0;
+        left: 0;
+        right: 0;
+        bottom: 0;
+        background-color: #4B5563;
+        transition: .4s;
+        border-radius: 34px;
+    }
+    
+    .slider:before {
+        position: absolute;
+        content: "";
+        height: 22px;
+        width: 22px;
+        left: 4px;
+        bottom: 4px;
+        background-color: white;
+        transition: .4s;
+        border-radius: 50%;
+    }
+    
+    input:checked + .slider {
+        background-color: #10B981;
+    }
+    
+    input:checked + .slider:before {
+        transform: translateX(30px);
+    }
+    
+    /* Scrollbar */
+    ::-webkit-scrollbar {
+        width: 8px;
+        height: 8px;
+    }
+    
+    ::-webkit-scrollbar-track {
+        background: var(--border-color);
+        border-radius: 4px;
+    }
+    
+    ::-webkit-scrollbar-thumb {
+        background: #4f46e5;
+        border-radius: 4px;
+    }
+    
+    ::-webkit-scrollbar-thumb:hover {
+        background: #6366f1;
+    }
+    
+    /* QR Code */
+    #studentQRCode canvas {
+        width: 200px !important;
+        height: 200px !important;
+        border: 2px solid #4f46e5;
+        border-radius: 8px;
+        padding: 5px;
+        background: white;
+    }
+    
+    /* Section Header */
+    .section-header {
+        font-size: 2rem;
+        font-weight: 700;
+        background: linear-gradient(135deg, #4f46e5, #7c3aed);
+        background-clip: text;
+        -webkit-background-clip: text;
+        color: transparent;
+        -webkit-text-fill-color: transparent;
+        margin-bottom: 2rem;
+        letter-spacing: -0.02em;
+    }
+    
+    /* Responsive */
+    @media (max-width: 768px) {
+        .sidebar {
+            width: 180px;
+        }
+        
+        .info-grid {
+            grid-template-columns: 1fr;
+            gap: 1.25rem;
+        }
+        
+        td .edit-btn,
+        td .delete-btn {
+            display: block;
+            margin: 5px auto;
+            width: 100%;
+            max-width: 120px;
+        }
+        
+        select {
+            font-size: 14px;
+            padding: 10px !important;
+        }
+    }
+    
+    /* Force hide buttons */
+    .edit-btn.hidden, .delete-btn.hidden {
+        display: none !important;
+        visibility: hidden !important;
+        opacity: 0 !important;
+        pointer-events: none !important;
+    }
+    
+    /* Ensure buttons are visible by default */
+    .edit-btn, .delete-btn {
+        display: inline-block !important;
+    }
+    
+    /* Lecture modal styles */
+    #conflictWarning {
+        animation: shake 0.3s ease-in-out;
+    }
+    
+    @keyframes shake {
+        0%, 100% { transform: translateX(0); }
+        25% { transform: translateX(-5px); }
+        75% { transform: translateX(5px); }
+    }
+    
+    button:disabled {
+        opacity: 0.5;
+        cursor: not-allowed;
+    }
+    
+    #locationAvailabilityMessage {
+        transition: all 0.3s ease;
+    }
+    
+    .location-available {
+        color: #10b981;
+    }
+    
+    .location-unavailable {
+        color: #ef4444;
+    }
+    
+    /* Password field wrapper */
+    .password-field-wrapper {
+        background: rgba(0, 0, 0, 0.2);
+        border-radius: 1.5rem;
+        border: 1px solid var(--border-color);
+        padding: 0.2rem 0.2rem 0.2rem 1.75rem;
+        transition: all 0.2s ease;
+        display: flex;
+        align-items: center;
+        backdrop-filter: blur(4px);
+    }
+    
+    .password-field-wrapper:focus-within {
+        border-color: #4f46e5;
+        box-shadow: 0 0 0 3px rgba(79, 70, 229, 0.3);
+        background: rgba(79, 70, 229, 0.1);
+    }
+    
+    .password-field-wrapper input {
+        background: transparent !important;
+        border: none !important;
+        box-shadow: none !important;
+        padding: 0.9rem 0.5rem !important;
+        flex: 1;
+        font-size: 1rem;
+    }
+    
+    .password-field-wrapper input::placeholder {
+        color: rgba(255, 255, 255, 0.3);
+    }
+    
+    .password-field-wrapper button {
+        background: rgba(255, 255, 255, 0.05);
+        border-radius: 1.25rem;
+        padding: 0.7rem 1.4rem;
+        transition: all 0.15s ease;
+        border: none;
+        color: #94a3b8;
+        cursor: pointer;
+        margin-right: 0.2rem;
+    }
+    
+    .password-field-wrapper button:hover {
+        background: #4f46e5;
+        color: white;
+    }
+    
+    /* تأثير نبض للتحديث */
+    @keyframes pulse {
+        0% { opacity: 0.6; }
+        50% { opacity: 1; }
+        100% { opacity: 0.6; }
+    }
+    
+    .student-login-updated {
+        animation: pulse 2s ease-in-out;
+        background-color: rgba(79, 70, 229, 0.1);
+        transition: background-color 0.3s ease;
+    }
+    
+    #studentLoginLastUpdate {
+        transition: all 0.3s ease;
+    }
+    
+    #studentLoginLastUpdate i {
+        animation: spin 2s linear infinite;
+    }
+    
+    /* تأثير وميض عند التحديث */
+    @keyframes tableFlash {
+        0% { background-color: rgba(79, 70, 229, 0); }
+        30% { background-color: rgba(79, 70, 229, 0.2); }
+        100% { background-color: rgba(79, 70, 229, 0); }
+    }
+    
+    .student-login-updated {
+        animation: tableFlash 1s ease-in-out;
+    }
+    
+    /* تحسين مؤشر آخر تحديث */
+    #studentLoginLastUpdate {
+        background: rgba(0, 0, 0, 0.3);
+        backdrop-filter: blur(4px);
+        border: 1px solid rgba(79, 70, 229, 0.3);
+    }
+    
+    #studentLoginLastUpdate i {
+        animation: none;
+    }
+    
+    #studentLoginLastUpdate .fa-clock {
+        color: #10b981;
+    }
+    
+    /* تأثير للتحديث */
+    @keyframes highlightPulse {
+        0% { background-color: rgba(79, 70, 229, 0); }
+        50% { background-color: rgba(79, 70, 229, 0.3); }
+        100% { background-color: rgba(79, 70, 229, 0); }
+    }
+    
+    .student-login-updated {
+        animation: highlightPulse 1s ease-in-out;
+    }
+    
+    /* تحسين زر Refresh */
+    #studentLoginRefreshBtn {
+        transition: all 0.3s ease;
+    }
+    
+    #studentLoginRefreshBtn:active {
+        transform: scale(0.95);
+    }
+    
+    #studentLoginRefreshBtn i {
+        transition: transform 0.3s ease;
+    }
+    
+    #studentLoginRefreshBtn:hover i {
+        transform: rotate(180deg);
+    }
+    
+    /* مؤشر آخر تحديث */
+    #studentLoginLastUpdate {
+        background: rgba(0, 0, 0, 0.3);
+        backdrop-filter: blur(4px);
+        border: 1px solid rgba(79, 70, 229, 0.3);
+        padding: 4px 12px;
+        border-radius: 20px;
+        font-size: 11px;
+    }
+    
+    #studentLoginLastUpdate .fa-clock {
+        color: #10b981;
+        animation: none;
+    }
+    
+    /* Admin Info Card */
+    #adminInfo {
+        background: var(--bg-secondary);
+        border: 1px solid var(--border-color);
+    }
+    
+    /* Custom Toast */
+    #customToast > div, #toast > div {
+        background: var(--bg-card);
+        border: 1px solid var(--border-color);
+        color: var(--text-primary);
+    }
+    
+    /* Modal Background */
+    #confirmationModal, #reportFilterModal, #studentPasswordModal {
+        background: rgba(0, 0, 0, 0.8);
+    }
+    
+    /* Dashboard Loading */
+    #dashboardLoading {
+        background: rgba(0, 0, 0, 0.9);
+    }
+        /* ============================================
+       PROFESSIONAL THEME TOGGLE BUTTON
+       ============================================ */
+
+    
+    /* ============================================
+       PROFESSIONAL THEME TOGGLE BUTTON - Next to Date
+       ============================================ */
+    .theme-toggle-btn {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        padding: 10px 18px;
+        background: var(--bg-card);
+        border: 1px solid var(--border-color);
+        border-radius: 40px;
+        cursor: pointer;
+        transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        box-shadow: var(--card-shadow);
+    }
+    
+    .theme-toggle-btn:hover {
+        transform: translateY(-2px);
+        border-color: #4f46e5;
+        box-shadow: 0 4px 12px rgba(79, 70, 229, 0.2);
+    }
+    
+    .theme-toggle-btn:active {
+        transform: scale(0.97);
+    }
+    
+    .theme-toggle-icon {
+        position: relative;
+        width: 20px;
+        height: 20px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+    }
+    
+    .theme-toggle-icon i {
+        position: absolute;
+        font-size: 1rem;
+        transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    }
+    
+    .sun-icon {
+        color: #f59e0b;
+        opacity: 1;
+        transform: rotate(0deg) scale(1);
+    }
+    
+    .moon-icon {
+        color: #818cf8;
+        opacity: 0;
+        transform: rotate(-90deg) scale(0.5);
+    }
+    
+    .theme-toggle-text {
+        font-size: 0.8rem;
+        font-weight: 500;
+        color: var(--text-secondary);
+        transition: color 0.3s ease;
+    }
+    
+    .theme-toggle-text::before {
+        content: "Light";
+    }
+    
+    /* Dark mode active state */
+    body.dark-mode .theme-toggle-btn {
+        background: var(--bg-card);
+        border-color: var(--border-color);
+    }
+    
+    body.dark-mode .sun-icon {
+        opacity: 0;
+        transform: rotate(90deg) scale(0.5);
+    }
+    
+    body.dark-mode .moon-icon {
+        opacity: 1;
+        transform: rotate(0deg) scale(1);
+    }
+    
+    body.dark-mode .theme-toggle-text {
+        color: var(--text-primary);
+    }
+    
+    body.dark-mode .theme-toggle-text::before {
+        content: "Dark";
+    }
+    
+    /* Date badge styling */
+    .date-badge {
+        background: var(--bg-card);
+        border-color: var(--border-color);
+        color: var(--text-primary);
+    }
+    
+    /* Responsive */
+    @media (max-width: 640px) {
+        .theme-toggle-btn {
+            padding: 8px 14px;
+        }
+        
+        .theme-toggle-text {
+            font-size: 0.7rem;
+        }
+        
+        .theme-toggle-icon {
+            width: 18px;
+            height: 18px;
+        }
+        
+        .theme-toggle-icon i {
+            font-size: 0.85rem;
+        }
+    }
+
+  </style>
+</head>
+<body class="min-h-screen light-mode">
+
+
+  <!-- Login Screen -->
+  <div id="loginScreen" class="flex items-center justify-center min-h-screen">
+    <div class="login-container p-8 rounded-2xl w-full max-w-sm text-center">
+      <div class="w-20 h-20 bg-gradient-to-br from-indigo-500 to-purple-600 rounded-2xl mx-auto mb-6 flex items-center justify-center shadow-lg">
+        <i class="fas fa-crown text-3xl text-white"></i>
+      </div>
+      <h1 class="text-4xl font-bold mb-2 bg-gradient-to-r from-indigo-500 to-purple-600 bg-clip-text text-transparent">Attendance System</h1>
+      <p class="text-gray-500 dark:text-gray-400 text-sm mb-6">Admin Dashboard</p>
+      <form id="loginForm" class="space-y-6">
+        <input type="text" id="username" placeholder="Username" required 
+               class="w-full px-6 py-3 rounded-xl focus:ring-2 focus:ring-indigo-500 text-base"/>
+        <input type="password" id="password" placeholder="Password" required 
+               class="w-full px-6 py-3 rounded-xl focus:ring-2 focus:ring-indigo-500 text-base"/>
+        <button type="submit" class="w-full btn-gradient py-3 rounded-xl font-bold text-base shadow-md">Login</button>
+      </form>
+    </div>
+  </div>
+
+  <!-- Dashboard -->
+  <div id="dashboard" class="hidden flex min-h-screen">
+    <!-- Sidebar -->
+    <div class="sidebar p-6 flex flex-col">
+      <div class="text-center mb-8">
+        <div class="w-20 h-20 bg-gradient-to-br from-indigo-500 to-purple-600 rounded-2xl mx-auto mb-4 flex items-center justify-center">
+          <i class="fas fa-crown text-3xl text-white"></i>
+        </div>
+        <div id="adminInfo" class="p-4 rounded-xl">
+          <p id="adminName" class="font-bold text-lg text-indigo-500">TRAXA</p>
+          <p id="adminRole" class="text-sm text-gray-500 dark:text-gray-400 mt-1">Management System</p>
+        </div>
+      </div>
+      
+      <nav class="space-y-2 flex-1">
+        <button data-section="students" class="nav-btn w-full text-left p-4 rounded-xl transition-all duration-200 flex items-center gap-3 active">
+          <i class="fas fa-users w-6"></i>
+          <span class="font-medium">Students</span>
+        </button>
+        <button data-section="doctors" class="nav-btn w-full text-left p-4 rounded-xl transition-all duration-200 flex items-center gap-3">
+          <i class="fas fa-user-md w-6"></i>
+          <span class="font-medium">Doctors</span>
+        </button>
+        <button data-section="teaching-assistants" class="nav-btn w-full text-left p-4 rounded-xl transition-all duration-200 flex items-center gap-3">
+          <i class="fas fa-chalkboard-user w-6"></i>
+          <span class="font-medium">Teaching Assistants</span>
+        </button>
+        <button data-section="subjects" class="nav-btn w-full text-left p-4 rounded-xl transition-all duration-200 flex items-center gap-3">
+          <i class="fas fa-book w-6"></i>
+          <span class="font-medium">Subjects</span>
+        </button>
+        <button data-section="lectures" class="nav-btn w-full text-left p-4 rounded-xl transition-all duration-200 flex items-center gap-3">
+          <i class="fas fa-chalkboard-teacher w-6"></i>
+          <span class="font-medium">Lectures</span>
+        </button>
+        <button data-section="reports" class="nav-btn w-full text-left p-4 rounded-xl transition-all duration-200 flex items-center gap-3">
+          <i class="fas fa-chart-bar w-6"></i>
+          <span class="font-medium">Reports</span>
+        </button>
+        <button id="managementBtn" data-section="management" class="nav-btn w-full text-left p-4 rounded-xl transition-all duration-200 flex items-center gap-3">
+          <i class="fas fa-cogs w-6"></i>
+          <span class="font-medium">Management</span>
+        </button>
+        <button data-section="student-login" class="nav-btn w-full text-left p-4 rounded-xl transition-all duration-200 flex items-center gap-3">
+          <i class="fas fa-user-lock w-6"></i>
+          <span class="font-medium">Student Login</span>
+        </button>
+        <button data-section="recyclebin" class="nav-btn w-full text-left p-4 rounded-xl transition-all duration-200 flex items-center gap-3">
+          <i class="fas fa-trash-restore w-6"></i>
+          <span class="font-medium">Recycle Bin</span>
+        </button>
+      </nav>
+      
+      <button id="logout" class="w-full bg-red-600/20 hover:bg-red-600/40 text-red-400 py-4 rounded-xl font-bold transition-all duration-200 flex items-center justify-center gap-3 mt-6 border border-red-500/30">
+        <i class="fas fa-sign-out-alt"></i>
+        <span>Logout</span>
+      </button>
+    </div>
+
+    <!-- Main Content -->
+    <div class="flex-1 p-8 overflow-y-auto">
+              <div class="flex justify-between items-center mb-8">
+          <h1 id="sectionTitle" class="section-header">
+            Students Management
+          </h1>
+          <div class="flex items-center gap-4">
+            <!-- Theme Toggle Button - Next to Date -->
+            <button id="themeToggleBtn" class="theme-toggle-btn" title="Toggle Light/Dark Mode">
+              <div class="theme-toggle-icon">
+                <i class="fas fa-sun sun-icon"></i>
+                <i class="fas fa-moon moon-icon"></i>
+              </div>
+              <span class="theme-toggle-text"></span>
+            </button>
+            <span class="px-5 py-3 rounded-xl shadow-lg border date-badge">
+              <i class="fas fa-calendar mr-2 text-indigo-500"></i>
+              <span id="currentDateTime" class="font-medium"></span>
+            </span>
+          </div>
+        </div>
+
+      <!-- Students Section -->
+      <div id="studentsSection">
+        <div class="mb-8">
+          <button id="addStudentBtn" class="add-btn btn-gradient px-6 py-3 rounded-xl text-base shadow-md">+ Add New Student</button>
+        </div>
+
+        <div class="mb-8 rounded-2xl p-6" style="background: var(--bg-card); border: 1px solid var(--border-color);">
+          <div class="flex flex-wrap gap-4 items-end">
+            <div class="flex-1 min-w-60">
+              <label class="block text-sm font-medium mb-2">Search by Name or ID</label>
+              <input type="text" id="searchInput" placeholder="Type to search..." 
+                     class="w-full px-4 py-2 rounded-xl focus:ring-2 focus:ring-indigo-500 text-sm"/>
+            </div>
+            <div>
+              <label class="block text-sm font-medium mb-2">Level</label>
+              <select id="levelFilter" class="px-4 py-2 rounded-xl text-sm">
+                <option value="">All Levels</option>
+              </select>
+            </div>
+            <div>
+              <label class="block text-sm font-medium mb-2">Department</label>
+              <select id="deptFilter" class="px-4 py-2 rounded-xl text-sm">
+                <option value="">All Departments</option>
+              </select>
+            </div>
+            <button onclick="filterAndRenderStudents()" class="btn-gradient px-6 py-3 rounded-xl text-sm font-semibold">Search</button>
+          </div>
+        </div>
+
+        <div id="studentsList" class="rounded-2xl p-6" style="background: var(--bg-card); border: 1px solid var(--border-color);"></div>
+      </div>
+
+      <!-- Doctors Section -->
+      <div id="doctorsSection" class="hidden">
+        <div class="mb-8">
+          <button id="addDoctorBtn" class="add-btn btn-gradient px-6 py-3 rounded-xl text-base shadow-md">+ Add Doctor</button>
+        </div>
+        <div id="doctorsList" class="rounded-2xl p-6" style="background: var(--bg-card); border: 1px solid var(--border-color);"></div>
+      </div>
+      
+      <!-- Teaching Assistants Section -->
+      <div id="teaching-assistantsSection" class="hidden">
+        <div class="mb-8">
+          <button id="addTaBtn" class="add-btn btn-gradient px-6 py-3 rounded-xl text-base shadow-md">+ Add Teaching Assistant</button>
+        </div>
+        <div id="teachingAssistantsList" class="rounded-2xl p-6" style="background: var(--bg-card); border: 1px solid var(--border-color);"></div>
+      </div>
+
+      <!-- Subjects Section -->
+      <div id="subjectsSection" class="hidden">
+        <div class="mb-8">
+          <button id="addSubjectBtn" class="add-btn btn-gradient px-6 py-3 rounded-xl text-base shadow-md">+ Add Subject</button>
+        </div>
+        <div id="subjectsList" class="rounded-2xl p-6" style="background: var(--bg-card); border: 1px solid var(--border-color);"></div>
+      </div>
+
+      <!-- Lectures Section -->
+      <div id="lecturesSection" class="hidden">
+        <div class="mb-8">
+          <button id="addLectureBtn" class="add-btn btn-gradient px-6 py-3 rounded-xl text-base shadow-md">+ Add Lecture</button>
+        </div>
+        <div id="lecturesList" class="rounded-2xl p-6" style="background: var(--bg-card); border: 1px solid var(--border-color);"></div>
+      </div>
+
+      <!-- Reports Section -->
+      <div id="reportsSection" class="hidden">
+        <h2 class="text-3xl font-bold mb-8">Export Reports</h2>
+        
+        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
+          
+          <!-- Students Report Card -->
+          <button onclick="openReportFilterModal('students')" class="report-card">
+            <i class="fas fa-users icon-lg mb-4"></i>
+            <h3 class="text-xl font-bold">Students Report</h3>
+            <p class="mt-2 text-sm opacity-90">List of all students with status</p>
+          </button>
+
+          <!-- Doctors Report Card -->
+          <button onclick="openReportFilterModal('doctors')" class="report-card" style="background: linear-gradient(135deg, #059669, #047857);">
+            <i class="fas fa-user-md icon-lg mb-4"></i>
+            <h3 class="text-xl font-bold">Doctors Report</h3>
+            <p class="mt-2 text-sm opacity-90">Doctors information & contacts</p>
+          </button>
+
+          <!-- Subjects Report Card -->
+          <button onclick="openReportFilterModal('subjects')" class="report-card" style="background: linear-gradient(135deg, #7c3aed, #6d28d9);">
+            <i class="fas fa-book icon-lg mb-4"></i>
+            <h3 class="text-xl font-bold">Subjects Report</h3>
+            <p class="mt-2 text-sm opacity-90">Subjects, doctors & levels</p>
+          </button>
+
+          <!-- Lectures Report Card -->
+          <button onclick="openReportFilterModal('lectures')" class="report-card" style="background: linear-gradient(135deg, #ea580c, #c2410c);">
+            <i class="fas fa-chalkboard-teacher icon-lg mb-4"></i>
+            <h3 class="text-xl font-bold">Lectures Report</h3>
+            <p class="mt-2 text-sm opacity-90">Full schedule & locations</p>
+          </button>
+
+          <!-- QR Codes Card -->
+          <button id="qrCodesCard" onclick="openReportFilterModal('qr')" class="report-card" style="background: linear-gradient(135deg, #0891b2, #0e7490);">
+            <i class="fas fa-qrcode icon-lg mb-4"></i>
+            <h3 class="text-xl font-bold">Student QR Codes</h3>
+            <p class="mt-2 text-sm opacity-90">Download all student QR codes</p>
+          </button>
+
+        </div>
+      </div>
+
+      <!-- Management Section -->
+      <div id="managementSection" class="hidden">
+        <!-- Management Cards Grid -->
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-6" id="managementCards">
+          <!-- Users Management Card -->
+          <div class="management-card">
+            <i class="fas fa-users-cog icon-lg mb-4"></i>
+            <h3 class="text-xl font-bold">Users Management</h3>
+          </div>
+
+          <!-- Create Backup Card -->
+          <div class="management-card" style="background: linear-gradient(135deg, #059669, #047857);">
+            <i class="fas fa-download icon-lg mb-4"></i>
+            <h3 class="text-xl font-bold">Create Backup</h3>
+          </div>
+
+          <!-- Restore Backup Card -->
+          <div class="management-card" style="background: linear-gradient(135deg, #dc2626, #b91c1c);">
+            <i class="fas fa-upload icon-lg mb-4"></i>
+            <h3 class="text-xl font-bold">Restore Backup</h3>
+          </div>
+
+          <!-- Verify Data Card -->
+          <div class="management-card" style="background: linear-gradient(135deg, #d97706, #b45309);">
+            <i class="fas fa-search icon-lg mb-4"></i>
+            <h3 class="text-xl font-bold">Verify Data</h3>
+          </div>
+
+          <!-- Database Info Card -->
+          <div class="management-card" style="background: linear-gradient(135deg, #7c3aed, #6d28d9);" onclick="checkDatabaseInfo()">
+            <i class="fas fa-database icon-lg mb-4"></i>
+            <h3 class="text-xl font-bold">Database Info</h3>
+          </div>
+        </div>
+
+        <!-- Hidden File Input for Restore -->
+        <input type="file" id="restoreInput" accept=".zip" class="hidden" />
+
+        <!-- Users Management Sub-section -->
+        <div id="usersManagementSection" class="hidden mt-8">
+          <div class="mb-8 flex justify-between items-center">
+            <h2 class="text-3xl font-bold">Users Management</h2>
+            <button id="addUserBtn" class="btn-gradient px-6 py-3 rounded-xl text-base shadow-md">+ Add User</button>
+          </div>
+          <div id="usersList" class="rounded-2xl p-6" style="background: var(--bg-card); border: 1px solid var(--border-color);"></div>
+        </div>        
+      </div> <!-- نهاية managementSection -->
+      
+      <!-- Recycle Bin Section -->
+      <div id="recyclebinSection" class="hidden mt-8">
+        <div class="mb-8 flex justify-between items-center">
+          <h2 class="text-3xl font-bold text-red-400">
+            <i class="fas fa-trash-restore mr-2"></i>Recycle Bin Management
+          </h2>
+          <div class="flex gap-4">
+            <button onclick="exportRecycleBinReport()" class="btn-gradient px-6 py-3 rounded-xl text-base shadow-md">
+              <i class="fas fa-download mr-2"></i>Export Report
+            </button>
+            <button onclick="loadRecycleBin()" class="bg-gray-700 hover:bg-gray-600 px-6 py-3 rounded-xl text-base shadow-md">
+              <i class="fas fa-sync-alt mr-2"></i>Refresh
+            </button>
+          </div>
+        </div>
+        
+        <!-- إحصائيات سريعة -->
+        <div class="grid grid-cols-1 md:grid-cols-4 gap-4 mb-6">
+          <div class="bg-red-900/30 p-4 rounded-xl border border-red-500/30">
+            <p class="text-gray-400 text-sm">Pending</p>
+            <p id="pendingCount" class="text-2xl font-bold text-yellow-400">0</p>
+          </div>
+          <div class="bg-green-900/30 p-4 rounded-xl border border-green-500/30">
+            <p class="text-gray-400 text-sm">Confirmed</p>
+            <p id="confirmedCount" class="text-2xl font-bold text-green-400">0</p>
+          </div>
+          <div class="bg-blue-900/30 p-4 rounded-xl border border-blue-500/30">
+            <p class="text-gray-400 text-sm">Restored</p>
+            <p id="restoredCount" class="text-2xl font-bold text-blue-400">0</p>
+          </div>
+          <div class="bg-purple-900/30 p-4 rounded-xl border border-purple-500/30">
+            <p class="text-gray-400 text-sm">Total</p>
+            <p id="totalCount" class="text-2xl font-bold text-purple-400">0</p>
+          </div>
+        </div>
+        
+        <!-- الفلاتر -->
+        <div class="mb-6 rounded-2xl p-4" style="background: var(--bg-card); border: 1px solid var(--border-color);">
+          <div class="flex flex-wrap gap-4 items-center">
+            <div>
+              <label class="block text-sm font-medium mb-1">Action</label>
+              <select id="recycleActionFilter" class="px-3 py-2 rounded-lg text-sm">
+                <option value="">All Actions</option>
+                <option value="delete">Delete</option>
+                <option value="edit">Edit</option>
+              </select>
+            </div>
+            <div>
+              <label class="block text-sm font-medium mb-1">Entity</label>
+              <select id="recycleEntityFilter" class="px-3 py-2 rounded-lg text-sm">
+                <option value="">All Entities</option>
+                <option value="student">Student</option>
+                <option value="doctor">Doctor</option>
+                <option value="subject">Subject</option>
+                <option value="lecture">Lecture</option>
+              </select>
+            </div>
+            <div>
+              <label class="block text-sm font-medium mb-1">Status</label>
+              <select id="recycleStatusFilter" class="px-3 py-2 rounded-lg text-sm">
+                <option value="">All Status</option>
+                <option value="pending">Pending</option>
+                <option value="confirmed">Confirmed</option>
+                <option value="restored">Restored</option>
+              </select>
+            </div>
+            <div>
+              <label class="block text-sm font-medium mb-1">Date Range</label>
+              <div class="flex gap-2">
+                <input type="date" id="recycleStartDate" class="px-3 py-2 rounded-lg text-sm">
+                <span class="text-gray-400 self-center">to</span>
+                <input type="date" id="recycleEndDate" class="px-3 py-2 rounded-lg text-sm">
+              </div>
+            </div>
+            <div class="flex gap-2 mt-4">
+              <button onclick="applyRecycleFilters()" class="btn-gradient px-4 py-2 rounded-lg text-sm">Apply Filters</button>
+              <button onclick="resetRecycleFilters()" class="bg-gray-700 hover:bg-gray-600 px-4 py-2 rounded-lg text-sm">Reset</button>
+            </div>
+          </div>
+        </div>
+        
+        <!-- قائمة السجلات -->
+        <div id="recyclebinList" class="rounded-2xl p-6" style="background: var(--bg-card); border: 1px solid var(--border-color);"></div>
+      </div>
+
+      <!-- Student Login Management Section -->
+      <div id="student-loginSection" class="hidden mt-8">
+        <div class="mb-8 flex justify-between items-center">
+          <h2 class="text-3xl font-bold text-indigo-400">
+            <i class="fas fa-user-lock mr-2"></i>Student Login Management
+          </h2>
+          <div class="flex gap-4">
+            <button onclick="exportStudentLoginReport()" class="btn-gradient px-6 py-3 rounded-xl text-base shadow-md">
+              <i class="fas fa-download mr-2"></i>Export Report
+            </button>
+            <button onclick="loadStudentLoginData()" class="bg-gray-700 hover:bg-gray-600 px-6 py-3 rounded-xl text-base shadow-md">
+              <i class="fas fa-sync-alt mr-2"></i>Refresh
+            </button>
+            <button onclick="debugStudentLoginTable()" class="bg-purple-600 hover:bg-purple-700 px-4 py-2 rounded-lg text-sm shadow-md flex items-center gap-2">
+    <i class="fas fa-bug"></i>
+    Debug
+</button>
+          </div>
+        </div>
+        
+        <!-- إحصائيات سريعة -->
+        <div class="grid grid-cols-1 md:grid-cols-4 gap-4 mb-6">
+          <div class="bg-indigo-900/30 p-4 rounded-xl border border-indigo-500/30">
+            <p class="text-gray-400 text-sm">Total Accounts</p>
+            <p id="totalStudentLogins" class="text-2xl font-bold text-indigo-400">0</p>
+          </div>
+          <div class="bg-green-900/30 p-4 rounded-xl border border-green-500/30">
+            <p class="text-gray-400 text-sm">Active Today</p>
+            <p id="activeTodayCount" class="text-2xl font-bold text-green-400">0</p>
+          </div>
+          <div class="bg-blue-900/30 p-4 rounded-xl border border-blue-500/30">
+            <p class="text-gray-400 text-sm">Total Students</p>
+            <p id="totalStudentsCount" class="text-2xl font-bold text-blue-400">0</p>
+          </div>
+          <div class="bg-purple-900/30 p-4 rounded-xl border border-purple-500/30">
+            <p class="text-gray-400 text-sm">Without Account</p>
+            <p id="withoutAccountCount" class="text-2xl font-bold text-purple-400">0</p>
+          </div>
+        </div>
+        
+        <!-- الفلاتر -->
+        <div class="mb-6 rounded-2xl p-4" style="background: var(--bg-card); border: 1px solid var(--border-color);">
+          <div class="flex flex-wrap gap-4 items-center">
+            <div>
+              <label class="block text-sm font-medium mb-1">Search</label>
+              <input type="text" id="studentLoginSearch" placeholder="Name or ID..." 
+                     class="px-3 py-2 rounded-lg text-sm w-64"
+                     onkeyup="filterStudentLoginData()">
+            </div>
+            <div>
+              <label class="block text-sm font-medium mb-1">Level</label>
+              <select id="studentLoginLevelFilter" class="px-3 py-2 rounded-lg text-sm" onchange="filterStudentLoginData()">
+                <option value="">All Levels</option>
+                <option value="1">Level 1</option>
+                <option value="2">Level 2</option>
+                <option value="3">Level 3</option>
+                <option value="4">Level 4</option>
+              </select>
+            </div>
+            <div>
+              <label class="block text-sm font-medium mb-1">Department</label>
+              <select id="studentLoginDeptFilter" class="px-3 py-2 rounded-lg text-sm" onchange="filterStudentLoginData()">
+                <option value="">All Departments</option>
+              </select>
+            </div>
+            <div>
+              <label class="block text-sm font-medium mb-1">Status</label>
+              <select id="studentLoginStatusFilter" class="px-3 py-2 rounded-lg text-sm" onchange="filterStudentLoginData()">
+                <option value="">All</option>
+                <option value="hasAccount">Has Account</option>
+                <option value="noAccount">No Account</option>
+              </select>
+            </div>
+            <div class="flex gap-2 mt-4">
+              <button onclick="filterStudentLoginData()" class="btn-gradient px-4 py-2 rounded-lg text-sm">Apply Filters</button>
+              <button onclick="resetStudentLoginFilters()" class="bg-gray-700 hover:bg-gray-600 px-4 py-2 rounded-lg text-sm">Reset</button>
+            </div>
+          </div>
+        </div>
+        
+        <!-- قائمة حسابات الطلاب -->
+        <div id="studentLoginList" class="rounded-2xl p-6" style="background: var(--bg-card); border: 1px solid var(--border-color);"></div>
+      </div>
+
+      <!-- Student Password Edit Modal -->
+      <div id="studentPasswordModal" class="fixed inset-0 bg-black/70 flex items-center justify-center z-50 hidden">
+        <div class="bg-gray-900 rounded-2xl w-full max-w-md p-8 border border-indigo-500/30">
+          <div class="flex justify-between items-center mb-6">
+            <h2 class="text-2xl font-bold text-indigo-400">Edit Student Password</h2>
+            <button onclick="closeStudentPasswordModal()" class="text-gray-400 hover:text-white text-3xl">&times;</button>
+          </div>
+          
+          <div id="editStudentInfo" class="mb-6 p-4 bg-indigo-900/20 rounded-xl border border-indigo-500/30">
+            <p id="editStudentName" class="font-bold text-lg"></p>
+            <p id="editStudentDetails" class="text-sm text-gray-400 mt-1"></p>
+          </div>
+          
+          <form id="editPasswordForm" class="space-y-4">
+            <input type="hidden" id="editStudentId">
+            <input type="hidden" id="editLoginId">
+            
+            <div>
+              <label class="block text-sm font-medium mb-2">New Password</label>
+              <div class="relative">
+                <input type="password" id="newStudentPassword" required 
+                       class="w-full px-4 py-3 rounded-xl text-white pr-12"
+                       placeholder="Enter new password">
+                <button type="button" onclick="togglePasswordVisibility('newStudentPassword')" 
+                        class="absolute right-4 top-3 text-gray-400">
+                  <i class="fas fa-eye"></i>
+                </button>
+              </div>
+            </div>
+            
+            <div>
+              <label class="block text-sm font-medium mb-2">Confirm Password</label>
+              <div class="relative">
+                <input type="password" id="confirmStudentPassword" required 
+                       class="w-full px-4 py-3 rounded-xl text-white pr-12"
+                       placeholder="Confirm new password">
+                <button type="button" onclick="togglePasswordVisibility('confirmStudentPassword')" 
+                        class="absolute right-4 top-3 text-gray-400">
+                  <i class="fas fa-eye"></i>
+                </button>
+              </div>
+            </div>
+            
+            <div class="flex justify-end gap-4 pt-4">
+              <button type="button" onclick="closeStudentPasswordModal()" 
+                      class="px-6 py-3 bg-gray-700 hover:bg-gray-600 rounded-xl">
+                Cancel
+              </button>
+              <button type="submit" class="btn-gradient px-6 py-3 rounded-xl">
+                Update Password
+              </button>
+            </div>
+          </form>
+        </div>
+      </div>
+
+      <!-- Custom Confirmation Modal -->
+      <div id="confirmationModal" class="fixed inset-0 bg-black/70 flex items-center justify-center z-[9999] hidden">
+        <div class="bg-slate-900 rounded-2xl w-full max-w-md p-8 border border-indigo-500/30 shadow-2xl transform transition-all duration-300 scale-95" id="confirmationModalContent">
+          <div class="text-center mb-6">
+            <div id="confirmationIcon" class="w-20 h-20 mx-auto mb-4 rounded-full flex items-center justify-center">
+              <i id="confirmationIconElement" class="fas fa-exclamation-triangle text-5xl text-yellow-400"></i>
+            </div>
+            <h3 id="confirmationTitle" class="text-2xl font-bold text-white mb-2">Confirm Action</h3>
+            <p id="confirmationMessage" class="text-gray-300 text-base"></p>
+          </div>
+          
+          <div id="confirmationCommentSection" class="mb-6 hidden">
+            <label for="confirmationComment" class="block text-sm font-medium text-gray-300 mb-2">
+              <i class="fas fa-pen mr-1"></i> Please provide a comment:
+            </label>
+            <textarea 
+              id="confirmationComment" 
+              rows="3" 
+              class="w-full px-4 py-3 bg-slate-800 rounded-xl border border-slate-600 focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500 text-white text-sm"
+              placeholder="Enter your comment here..."
+            ></textarea>
+            <p id="commentError" class="text-red-400 text-xs mt-1 hidden">Comment is required</p>
+          </div>
+          
+          <div class="flex gap-4">
+            <button id="confirmCancelBtn" class="flex-1 bg-gray-700 hover:bg-gray-600 text-white py-3 rounded-xl font-semibold transition-all duration-200">
+              <i class="fas fa-times mr-2"></i> Cancel
+            </button>
+            <button id="confirmActionBtn" class="flex-1 bg-gradient-to-r from-indigo-600 to-purple-600 hover:from-indigo-700 hover:to-purple-700 text-white py-3 rounded-xl font-semibold transition-all duration-200">
+              <i class="fas fa-check mr-2"></i> Confirm
+            </button>
+          </div>
+        </div>
+      </div>
+
+      <!-- Custom Toast Notification -->
+      <div id="customToast" class="fixed bottom-6 right-6 z-[9999] hidden">
+        <div class="text-white px-6 py-4 rounded-xl shadow-2xl flex items-center gap-4 toast">
+          <i id="customToastIcon" class="text-2xl"></i>
+          <span id="customToastMessage" class="text-base"></span>
+        </div>
+      </div>
+
+      <!-- Toast Notification -->
+      <div id="toast" class="fixed bottom-6 right-6 z-50 hidden">
+        <div class="text-white px-6 py-4 rounded-xl shadow-2xl flex items-center gap-4 toast">
+          <i id="toastIcon" class="text-2xl"></i>
+          <span id="toastMessage" class="text-base"></span>
+        </div>
+      </div>
+
+      <!-- Modals Container -->
+      <div id="modalsContainer">
+        <!-- Report Filter Modal -->
+        <div id="reportFilterModal" class="fixed inset-0 bg-black/70 flex items-center justify-center z-50 hidden">
+          <div class="bg-slate-900 p-8 rounded-2xl w-full max-w-lg border border-indigo-500/30 shadow-2xl">
+            <h2 id="reportFilterTitle" class="text-2xl font-bold mb-6 text-center text-indigo-400">Generate Report</h2>
+            
+            <form id="reportFilterForm" class="space-y-5">
+              <div id="reportFilterFields"></div>
+
+              <div class="flex justify-end gap-4 mt-8">
+                <button type="button" onclick="closeReportFilterModal()" 
+                        class="px-6 py-3 bg-gray-600 hover:bg-gray-700 rounded-xl transition">
+                  Cancel
+                </button>
+                <button type="submit" 
+                        class="px-8 py-3 bg-gradient-to-r from-indigo-600 to-purple-600 hover:from-indigo-700 hover:to-purple-700 rounded-xl font-semibold shadow-lg transition">
+                  Generate PDF
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      </div>
+
+    </div> <!-- نهاية Main Content -->
+  </div> <!-- نهاية Dashboard -->
+
+  <script src="script.js"></script>
+  <script>
+  // ============================================
+  // PROFESSIONAL THEME TOGGLE (Next to Date)
+  // ============================================
+  const themeToggleBtn = document.getElementById('themeToggleBtn');
+  const body = document.body;
+  
+  // Check for saved theme preference
+  const savedTheme = localStorage.getItem('theme');
+  if (savedTheme === 'dark') {
+    body.classList.remove('light-mode');
+    body.classList.add('dark-mode');
+  } else {
+    body.classList.add('light-mode');
+    body.classList.remove('dark-mode');
+  }
+  
+  // Theme toggle event with animation
+  if (themeToggleBtn) {
+    themeToggleBtn.addEventListener('click', function() {
+      // Add ripple effect
+      this.style.transform = 'scale(0.97)';
+      setTimeout(() => {
+        this.style.transform = '';
+      }, 150);
+      
+      if (body.classList.contains('light-mode')) {
+        body.classList.remove('light-mode');
+        body.classList.add('dark-mode');
+        localStorage.setItem('theme', 'dark');
+        showCustomToast('🌙 Dark mode activated', 'success');
+      } else {
+        body.classList.remove('dark-mode');
+        body.classList.add('light-mode');
+        localStorage.setItem('theme', 'light');
+        showCustomToast('☀️ Light mode activated', 'success');
+      }
+    });
+  }
+  // تفعيل أزرار الـ Management Cards
+  document.addEventListener('DOMContentLoaded', function() {
+    const managementCards = document.getElementById('managementCards');
+    if (managementCards) {
+      managementCards.addEventListener('click', function(e) {
+        const card = e.target.closest('.management-card');
+        if (!card) return;
+
+        const icon = card.querySelector('i');
+        if (!icon) return;
+
+        // Users Management Card
+        if (icon.classList.contains('fa-users-cog')) {
+          showUsersManagement();
+        }
+        // Create Backup Card
+        else if (icon.classList.contains('fa-download')) {
+          createBackup();
+        }
+        // Restore Backup Card
+        else if (icon.classList.contains('fa-upload')) {
+          restoreBackup();
+        }
+        // Verify Data Card
+        else if (icon.classList.contains('fa-search')) {
+          verifyRestoredData();
+        }
+        // Database Info Card
+        else if (icon.classList.contains('fa-database')) {
+          checkDatabaseInfo();
+        }
+      });
+    }
+
+    // تفعيل أزرار الـ Reports Cards
+    const reportsSection = document.getElementById('reportsSection');
+    if (reportsSection) {
+      reportsSection.addEventListener('click', function(e) {
+        const card = e.target.closest('.report-card');
+        if (!card) return;
+
+        const icon = card.querySelector('i');
+        if (!icon) return;
+
+        if (icon.classList.contains('fa-users')) {
+          openReportFilterModal('students');
+        } else if (icon.classList.contains('fa-user-md')) {
+          openReportFilterModal('doctors');
+        } else if (icon.classList.contains('fa-book')) {
+          openReportFilterModal('subjects');
+        } else if (icon.classList.contains('fa-chalkboard-teacher')) {
+          openReportFilterModal('lectures');
+        } else if (icon.classList.contains('fa-qrcode')) {
+          openReportFilterModal('qr');
+        }
+      });
+    }
+  });
+
+  // دوال الـ Management
+  async function showUsersManagement() {
+    console.log('Showing Users Management...');
+    document.getElementById('usersManagementSection').classList.remove('hidden');
+    await loadUsers();
+  }
+
+  async function createBackup() {
+    console.log('Creating backup...');
+    const card = event.target.closest('.management-card');
+    if (!card) return;
+
+    const originalHTML = card.innerHTML;
+    card.style.opacity = '0.6';
+    card.style.pointerEvents = 'none';
+    card.innerHTML = '<i class="fas fa-spinner fa-spin text-7xl mb-6"></i><h3 class="text-3xl font-bold">Creating Backup...</h3>';
+
+    const res = await authenticatedFetch('/api/backup', { method: 'POST' });
+    const data = res ? await res.json() : null;
+
+    showCustomToast(data?.message || 'Backup failed', res?.ok ? 'success' : 'error');
+
+    card.style.opacity = '1';
+    card.style.pointerEvents = 'auto';
+    card.innerHTML = originalHTML;
+  }
+
+  async function restoreBackup() {
+    console.log('Restore backup initiated...');
+    
+    const isServerRunning = await checkServerConnection();
+    if (!isServerRunning) {
+      showCustomToast('❌ Server is not running. Please start the server first.', 'error');
+      return;
+    }
+    
+    const fileInput = document.getElementById('restoreInput');
+    if (!fileInput) {
+      showCustomToast('Restore file input not found', 'error');
+      return;
+    }
+
+    fileInput.click();
+
+    fileInput.onchange = async () => {
+      const file = fileInput.files[0];
+      if (!file) {
+        fileInput.value = '';
+        return;
+      }
+
+      const fileName = file.name.toLowerCase();
+      if (!fileName.endsWith('.zip')) {
+        showCustomToast('❌ Invalid file type. Please select a .zip backup file', 'error');
+        fileInput.value = '';
+        return;
+      }
+
+      if (!confirm('⚠️ WARNING: This will overwrite ALL current data!\n\nThis action cannot be undone.\n\nContinue?')) {
+        fileInput.value = '';
+        return;
+      }
+      
+      if (!confirm('⚠️ FINAL CONFIRMATION:\n\nAre you absolutely sure you want to restore from this backup?')) {
+        fileInput.value = '';
+        return;
+      }
+
+      const restoreCard = document.querySelector('#managementCards > .management-card:nth-child(3)');
+      let originalHTML = '';
+      if (restoreCard) {
+        originalHTML = restoreCard.innerHTML;
+        restoreCard.style.opacity = '0.6';
+        restoreCard.style.pointerEvents = 'none';
+        restoreCard.innerHTML = '<i class="fas fa-spinner fa-spin text-7xl mb-6"></i><h3 class="text-3xl font-bold">Restoring...</h3><p class="mt-4">Replacing database folder...</p>';
+      }
+
+      const formData = new FormData();
+      formData.append('backup', file);
+
+      try {
+        const token = localStorage.getItem('token');
+        const response = await fetch('/api/restore', {
+          method: 'POST',
+          headers: {
+            'Authorization': `Bearer ${token}`
+          },
+          body: formData
+        });
+
+        let result = {};
+        try {
+          result = await response.json();
+        } catch (jsonError) {
+          console.error('Failed to parse JSON response:', jsonError);
+          throw new Error('Invalid response from server');
+        }
+
+        if (response.ok) {
+          let successMessage = '✅ <strong>Database Restored Successfully!</strong><br><br>';
+          
+          if (result.stats) {
+            successMessage += '<strong>📊 Loaded Statistics:</strong><br>';
+            successMessage += `• <strong>Students:</strong> ${result.stats.students || 0}<br>`;
+            successMessage += `• <strong>Doctors:</strong> ${result.stats.doctors || 0}<br>`;
+            successMessage += `• <strong>Subjects:</strong> ${result.stats.subjects || 0}<br>`;
+            successMessage += `• <strong>Lectures:</strong> ${result.stats.lectures || 0}<br>`;
+            successMessage += `• <strong>Users:</strong> ${result.stats.users || 0}<br>`;
+          }
+          
+          showCustomToast(successMessage, 'success');
+
+          setTimeout(async () => {
+            await loadData();
+            showCustomToast('✅ All data reloaded and verified', 'success');
+          }, 2000);
+
+        } else {
+          let errorMessage = '❌ Restore Failed';
+          if (result.error) {
+            errorMessage += `: ${result.error}`;
+          }
+          showCustomToast(errorMessage, 'error');
+        }
+
+      } catch (networkError) {
+        console.error('Network error during restore:', networkError);
+        showCustomToast('❌ Network Error: Could not connect to server', 'error');
+      } finally {
+        if (restoreCard) {
+          restoreCard.style.opacity = '1';
+          restoreCard.style.pointerEvents = 'auto';
+          restoreCard.innerHTML = originalHTML;
+        }
+        fileInput.value = '';
+      }
+    };
+  }
+
+  async function verifyRestoredData() {
+    console.log('🔍 Verifying restored data...');
+    
+    try {
+      const token = localStorage.getItem('token');
+      
+      const endpoints = [
+        { name: 'students', url: '/api/students' },
+        { name: 'doctors', url: '/api/doctors' },
+        { name: 'subjects', url: '/api/subjects' },
+        { name: 'lectures', url: '/api/lectures' }
+      ];
+      
+      let verificationResults = [];
+      
+      for (const endpoint of endpoints) {
+        try {
+          const response = await fetch(endpoint.url, {
+            headers: {
+              'Authorization': `Bearer ${token}`
+            }
+          });
+          
+          if (response.ok) {
+            const data = await response.json();
+            verificationResults.push({
+              name: endpoint.name,
+              count: data.length,
+              status: '✅'
+            });
+          } else {
+            verificationResults.push({
+              name: endpoint.name,
+              count: 0,
+              status: '❌'
+            });
+          }
+        } catch (error) {
+          verificationResults.push({
+            name: endpoint.name,
+            count: 0,
+            status: '❌'
+          });
+        }
+      }
+      
+      // التحقق من الملفات
+      try {
+        const filesResponse = await fetch('/api/files-status', {
+          headers: {
+            'Authorization': `Bearer ${token}`
+          }
+        });
+        
+        if (filesResponse.ok) {
+          const filesData = await filesResponse.json();
+          
+          let verificationMessage = '🔍 <strong>Data Verification Results</strong><br><br>';
+          
+          verificationResults.forEach(result => {
+            verificationMessage += `${result.status} <strong>${result.name}:</strong> ${result.count} records<br>`;
+          });
+          
+          verificationMessage += `<br><strong>📁 Files Status:</strong><br>`;
+          verificationMessage += `• Total files: ${filesData.files?.length || 0}<br>`;
+          
+          showCustomToast(verificationMessage, 'success');
+        } else {
+          showCustomToast('⚠️ Could not verify files status', 'warning');
+        }
+      } catch (filesError) {
+        showCustomToast('⚠️ Files verification skipped', 'warning');
+      }
+      
+    } catch (error) {
+      console.error('Verification error:', error);
+      showCustomToast('❌ Verification failed', 'error');
+    }
+  }
+
+  async function checkServerConnection() {
+    try {
+      const response = await fetch('/api');
+      return response.ok;
+    } catch (error) {
+      return false;
+    }
+  }
+
+  // Report Filter Functions
+  function openReportFilterModal(type) {
+    console.log('Opening report filter modal for type:', type);
+    
+    if (!type) {
+      showCustomToast('Report type is not specified', 'error');
+      return;
+    }
+    
+    const form = document.getElementById('reportFilterForm');
+    if (form) {
+      form.dataset.reportType = type;
+    }
+    
+    const titleEl = document.getElementById('reportFilterTitle');
+    const fieldsContainer = document.getElementById('reportFilterFields');
+    
+    fieldsContainer.innerHTML = '';
+    
+    let title = '';
+    let html = '';
+
+    switch(type) {
+      case 'students':
+      case 'qr':
+        title = type === 'students' ? 'Students Report Filter' : 'Student QR Codes Filter';
+        html = `
+          <div>
+            <label class="block text-sm font-medium mb-2">Level</label>
+            <select id="filterLevel" class="w-full px-4 py-3 bg-slate-800 border border-slate-600 rounded-xl">
+              <option value="">All Levels</option>
+              <option value="1">Level 1</option>
+              <option value="2">Level 2</option>
+              <option value="3">Level 3</option>
+              <option value="4">Level 4</option>
+            </select>
+          </div>
+          <div>
+            <label class="block text-sm font-medium mb-2">Department</label>
+            <select id="filterDepartment" class="w-full px-4 py-3 bg-slate-800 border border-slate-600 rounded-xl">
+              <option value="">All Departments</option>
+            </select>
+          </div>
+        `;
+        break;
+
+      case 'subjects':
+        title = 'Subjects Report Filter';
+        html = `
+          <div>
+            <label class="block text-sm font-medium mb-2">Level</label>
+            <select id="filterLevel" class="w-full px-4 py-3 bg-slate-800 border border-slate-600 rounded-xl">
+              <option value="">All Levels</option>
+              <option value="1">Level 1</option>
+              <option value="2">Level 2</option>
+              <option value="3">Level 3</option>
+              <option value="4">Level 4</option>
+            </select>
+          </div>
+          <div>
+            <label class="block text-sm font-medium mb-2">Semester</label>
+            <select id="filterSemester" class="w-full px-4 py-3 bg-slate-800 border border-slate-600 rounded-xl">
+              <option value="">All Semesters</option>
+              <option value="1">First Semester</option>
+              <option value="2">Second Semester</option>
+            </select>
+          </div>
+        `;
+        break;
+
+      case 'lectures':
+        title = 'Lectures Report Filter';
+        html = `
+          <div>
+            <label class="block text-sm font-medium mb-2">Level</label>
+            <select id="filterLevel" class="w-full px-4 py-3 bg-slate-800 border border-slate-600 rounded-xl">
+              <option value="">All Levels</option>
+              <option value="1">Level 1</option>
+              <option value="2">Level 2</option>
+              <option value="3">Level 3</option>
+              <option value="4">Level 4</option>
+            </select>
+          </div>
+        `;
+        break;
+
+      case 'doctors':
+        title = 'Doctors Report Filter';
+        html = `
+          <div>
+            <label class="block text-sm font-medium mb-2">Report Options</label>
+            <select id="filterOption" class="w-full px-4 py-3 bg-slate-800 border border-slate-600 rounded-xl">
+              <option value="all">All Doctors</option>
+              <option value="active">Active Doctors Only</option>
+              <option value="with-email">With Email Only</option>
+            </select>
+          </div>
+        `;
+        break;
+
+      default:
+        showCustomToast(`Report type "${type}" is not supported`, 'error');
+        return;
+    }
+
+    titleEl.textContent = title;
+    fieldsContainer.innerHTML = html;
+    
+    document.getElementById('reportFilterModal').classList.remove('hidden');
+  }
+
+  function closeReportFilterModal() {
+    document.getElementById('reportFilterModal').classList.add('hidden');
+  }
+
+    // دالة لعرض معلومات قاعدة البيانات
+    async function checkDatabaseInfo() {
+      try {
+        const token = localStorage.getItem('token');
+        if (!token) {
+          showCustomToast('Please login first', 'error');
+          return;
+        }
+
+        const response = await fetch('/api/database-info', {
+          headers: {
+            'Authorization': `Bearer ${token}`
+          }
+        });
+
+        if (response.ok) {
+          const data = await response.json();
+          console.log('Database Info:', data);
+          
+          let message = '📊 <strong>Database Information</strong><br><br>';
+          message += `<strong>Directory:</strong> ${data.directory}<br>`;
+          message += `<strong>Exists:</strong> ${data.exists ? '✅ Yes' : '❌ No'}<br><br>`;
+          
+          if (data.files && data.files.length > 0) {
+            message += `<strong>Files (${data.files.length}):</strong><br>`;
+            data.files.forEach(file => {
+              const status = file.exists ? '✅' : '❌';
+              const size = (file.size / 1024).toFixed(2);
+              message += `${status} ${file.name} (${size} KB)<br>`;
+            });
+          }
+          
+          showCustomToast(message, 'success');
+        } else {
+          showCustomToast('Failed to get database info', 'error');
+        }
+      } catch (error) {
+        console.error('Error getting database info:', error);
+        showCustomToast('Error getting database info', 'error');
+      }
+    }
+
+    // دالة لعرض معلومات النظام
+    async function showSystemInfo() {
+      try {
+        const response = await fetch('/api/health');
+        if (response.ok) {
+          const data = await response.json();
+          console.log('System Health:', data);
+          
+          let message = '🩺 <strong>System Health</strong><br><br>';
+          message += `<strong>Status:</strong> ${data.status}<br>`;
+          message += `<strong>Timestamp:</strong> ${new Date(data.timestamp).toLocaleString()}<br>`;
+          message += `<strong>Database:</strong> ${data.database.exists ? '✅ Connected' : '❌ Not Found'}<br>`;
+          message += `<strong>Files:</strong> ${data.database.files} JSON files`;
+          
+          showCustomToast(message, 'success');
+        }
+      } catch (error) {
+        console.error('Error getting system health:', error);
+        showCustomToast('System is running', 'info');
+      }
+    }
+
+    // تحديث الوقت
+    function updateDateTime() {
+      const now = new Date();
+      const formatted = now.toLocaleString('en-US', {
+        weekday: 'long',
+        year: 'numeric',
+        month: 'long',
+        day: 'numeric',
+        hour: '2-digit',
+        minute: '2-digit',
+        second: '2-digit'
+      });
+      const dateTimeElement = document.getElementById('currentDateTime');
+      if (dateTimeElement) {
+        dateTimeElement.textContent = formatted;
+      }
+    }
+
+    // تحديث معلومات المستخدم في الـ Sidebar
+    function updateAdminInfo() {
+      if (!currentUser) return;
+      
+      const adminName = document.getElementById('adminName');
+      const adminRole = document.getElementById('adminRole');
+      
+      if (adminName) adminName.textContent = currentUser.username || 'Admin';
+      if (adminRole) {
+        const roleText = currentUser.role === 'admin' ? 'Administrator' : 
+                         currentUser.role === 'it' ? 'IT Manager' :
+                         currentUser.role === 'mng' ? 'Manager' : 'Employee';
+        adminRole.innerHTML = `<i class="fas fa-shield-alt mr-1"></i> ${roleText}`;
+      }
+    }
+
+    // عرض معلومات النظام عند تحميل الصفحة
+    window.addEventListener('load', () => {
+      setTimeout(() => {
+        showSystemInfo();
+      }, 1000);
+      setInterval(updateDateTime, 1000);
+    });
+
+    // تفعيل وظيفة إظهار/إخفاء كلمة المرور
+    window.togglePasswordVisibility = function(inputId) {
+      const input = document.getElementById(inputId);
+      const button = input.nextElementSibling;
+      const icon = button.querySelector('i');
+      
+      if (input.type === 'password') {
+        input.type = 'text';
+        icon.classList.remove('fa-eye');
+        icon.classList.add('fa-eye-slash');
+      } else {
+        input.type = 'password';
+        icon.classList.remove('fa-eye-slash');
+        icon.classList.add('fa-eye');
+      }
+    };
+// ============================================
+// REAL-TIME STUDENT LOGIN UPDATES MONITORING
+// ============================================
+
+let lastStudentLoginCheck = new Date().toISOString();
+let studentLoginUpdateInterval = null;
+
+// بدء مراقبة التحديثات
+function startStudentLoginUpdatesMonitoring() {
+    // إيقاف أي مراقبة سابقة
+    if (studentLoginUpdateInterval) {
+        clearInterval(studentLoginUpdateInterval);
+    }
+    
+    console.log('🚀 Starting student login monitoring from index.html...');
+    
+    // التحقق من التحديثات كل 3 ثواني
+    studentLoginUpdateInterval = setInterval(async () => {
+        await checkForStudentLoginUpdates();
+    }, 3000);
+}
+
+// التحقق من وجود تحديثات
+async function checkForStudentLoginUpdates() {
+    // فقط إذا كان قسم Student Login مفتوحاً
+    const studentLoginSection = document.getElementById('student-loginSection');
+    if (!studentLoginSection || studentLoginSection.classList.contains('hidden')) {
+        return;
+    }
+    
+    try {
+        const token = localStorage.getItem('token');
+        if (!token) return;
+        
+        console.log('🔍 Checking for student login updates...');
+        console.log('   Last check:', lastStudentLoginCheck);
+        
+        const response = await fetch(`/api/student-login/check-updates?lastCheck=${encodeURIComponent(lastStudentLoginCheck)}`, {
+            headers: {
+                'Authorization': `Bearer ${token}`
+            }
+        });
+        
+        if (response.ok) {
+            const data = await response.json();
+            
+            console.log('📡 Update check response:', data);
+            
+            if (data.hasUpdates) {
+                console.log('🔄 Student login updates detected:', data.updates);
+                
+                // تحديث وقت آخر فحص
+                lastStudentLoginCheck = data.currentTime;
+                
+                // إعادة تحميل البيانات مع force refresh
+                await loadStudentLoginData(true);
+                
+                // إظهار إشعار للمستخدم
+                const updateCount = data.updates.length;
+                if (updateCount > 0) {
+                    showCustomToast(`🔄 ${updateCount} student password(s) updated`, 'info');
+                    
+                    // تحديث مؤشر آخر تحديث
+                    const lastUpdateEl = document.getElementById('studentLoginLastUpdate');
+                    if (lastUpdateEl) {
+                        lastUpdateEl.innerHTML = `<i class="fas fa-clock"></i> Last update: ${new Date().toLocaleTimeString()}`;
+                    }
+                }
+            } else {
+                console.log('✅ No updates detected');
+            }
+        } else {
+            console.warn('⚠️ Failed to check updates, status:', response.status);
+        }
+    } catch (error) {
+        console.error('Error checking for updates:', error);
+    }
+}
+// ============================================
+// DEBUG FUNCTION - لفحص البيانات بعد التحديث
+// ============================================
+window.debugStudentLoginTable = function() {
+    console.log('=== STUDENT LOGIN TABLE DEBUG ===');
+    console.log('studentLoginData:', studentLoginData);
+    console.log('studentLoginData length:', studentLoginData?.length);
+    console.log('First record:', studentLoginData?.[0]);
+    
+    // فحص عناصر الصفحة
+    const container = document.getElementById('studentLoginList');
+    console.log('Container exists:', !!container);
+    if (container) {
+        console.log('Container innerHTML length:', container.innerHTML.length);
+    }
+    
+    // عرض رسالة
+    showCustomToast(`Debug: Found ${studentLoginData?.length || 0} records`, 'info');
+};
+
+// إيقاف المراقبة
+function stopStudentLoginUpdatesMonitoring() {
+    if (studentLoginUpdateInterval) {
+        clearInterval(studentLoginUpdateInterval);
+        studentLoginUpdateInterval = null;
+        console.log('🛑 Student login updates monitoring stopped');
+    }
+}
+
+// بدء المراقبة عند تحميل الصفحة
+document.addEventListener('DOMContentLoaded', function() {
+    // بدء مراقبة تحديثات الطلاب
+    startStudentLoginUpdatesMonitoring();
+    
+    console.log('✅ Student login monitoring started from index.html');
+});
+  </script>
+</body>
+</html>

@@ -1,0 +1,749 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Traxa Doctor Management System</title>
+  <!-- QR Code and PDF Libraries -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.5.28/jspdf.plugin.autotable.min.js"></script>
+  <!-- SheetJS library for Excel files -->
+  <script src="https://cdn.sheetjs.com/xlsx-0.20.2/package/dist/xlsx.full.min.js"></script>
+  <!-- Tailwind CSS -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css"/>
+  <style>
+    @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap');
+    
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    
+    body { 
+      font-family: 'Inter', sans-serif; 
+      transition: background-color 0.3s ease, color 0.3s ease;
+      min-height: 100vh; 
+    }
+    
+    /* ============================================
+       LIGHT MODE (Default)
+       ============================================ */
+    body.light-mode {
+      --bg-primary: #f8fafc;
+      --bg-secondary: #ffffff;
+      --bg-card: #ffffff;
+      --bg-sidebar: #f1f5f9;
+      --text-primary: #0f172a;
+      --text-secondary: #475569;
+      --text-muted: #64748b;
+      --border-color: #e2e8f0;
+      --sidebar-border: #e2e8f0;
+      --card-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05), 0 2px 4px -1px rgba(0, 0, 0, 0.03);
+      --hover-bg: #f1f5f9;
+      --table-row-bg: #ffffff;
+      --table-row-hover: #f8fafc;
+      --input-bg: #ffffff;
+      --input-border: #e2e8f0;
+      --input-focus: #0ea5e9;
+      background: linear-gradient(135deg, #f8fafc 0%, #e2e8f0 100%);
+      color: #0f172a;
+    }
+    
+    /* ============================================
+       DARK MODE
+       ============================================ */
+    body.dark-mode {
+      --bg-primary: #0f172a;
+      --bg-secondary: #1e293b;
+      --bg-card: #1e293b;
+      --bg-sidebar: #0f172a;
+      --text-primary: #f1f5f9;
+      --text-secondary: #cbd5e1;
+      --text-muted: #94a3b8;
+      --border-color: #334155;
+      --sidebar-border: #1e293b;
+      --card-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.3);
+      --hover-bg: #334155;
+      --table-row-bg: #1e293b;
+      --table-row-hover: #334155;
+      --input-bg: #1e293b;
+      --input-border: #475569;
+      --input-focus: #38bdf8;
+      background: linear-gradient(135deg, #0f172a 0%, #1e1b4b 100%);
+      color: #f1f5f9;
+    }
+    
+    /* Apply CSS Variables */
+    body {
+      background: var(--bg-primary);
+      color: var(--text-primary);
+    }
+    
+    .login-container { 
+      background: var(--bg-card); 
+      backdrop-filter: blur(10px); 
+      border: 1px solid var(--border-color); 
+      border-radius: 2rem; 
+      box-shadow: var(--card-shadow); 
+    }
+    
+    .btn-primary { 
+      background: linear-gradient(90deg, #0ea5e9, #0284c7); 
+      transition: all 0.3s; 
+      border-radius: 14px; 
+      color: white;
+    }
+    
+    .btn-primary:hover { 
+      background: linear-gradient(90deg, #0284c7, #0369a1); 
+      transform: translateY(-2px); 
+      box-shadow: 0 5px 15px rgba(14, 165, 233, 0.4); 
+    }
+    
+    .card { 
+      transition: all 0.3s ease; 
+      backdrop-filter: blur(10px); 
+      background: var(--bg-card); 
+      border: 1px solid var(--border-color); 
+      border-radius: 24px; 
+    }
+    
+    .card:hover { 
+      transform: translateY(-5px); 
+      box-shadow: var(--card-shadow); 
+      border-color: #0ea5e9; 
+    }
+    
+    .stat-card { 
+      border-radius: 24px; 
+      backdrop-filter: blur(8px); 
+      box-shadow: 0 15px 30px -12px rgba(0, 0, 0, 0.3); 
+      transition: all 0.3s ease; 
+      border: 1px solid rgba(255, 255, 255, 0.1); 
+      padding: 20px; 
+      background: linear-gradient(135deg, #0ea5e9, #0284c7); 
+      color: white;
+    }
+    
+    .stat-card:hover { 
+      transform: translateY(-6px) scale(1.02); 
+      box-shadow: 0 25px 40px -12px rgba(14, 165, 233, 0.5); 
+    }
+    
+    .stat-card.purple { background: linear-gradient(135deg, #8b5cf6, #6d28d9); }
+    .stat-card.green { background: linear-gradient(135deg, #10b981, #059669); }
+    .stat-card.orange { background: linear-gradient(135deg, #f59e0b, #d97706); }
+    
+    .table-container { 
+      background: var(--bg-card); 
+      backdrop-filter: blur(10px); 
+      border-radius: 24px; 
+      padding: 24px; 
+      border: 1px solid var(--border-color); 
+      box-shadow: var(--card-shadow); 
+    }
+    
+    table { 
+      width: 100%; 
+      border-collapse: separate; 
+      border-spacing: 0 8px; 
+    }
+    
+    thead tr { 
+      background: linear-gradient(90deg, #0ea5e9, #0284c7); 
+      border-radius: 16px !important; 
+      overflow: hidden; 
+    }
+    
+    th { 
+      padding: 16px; 
+      text-align: left; 
+      font-weight: 600; 
+      color: white; 
+      font-size: 0.85rem; 
+      letter-spacing: 0.3px; 
+      text-transform: uppercase; 
+    }
+    
+    th:first-child { border-top-left-radius: 16px; border-bottom-left-radius: 16px; }
+    th:last-child { border-top-right-radius: 16px; border-bottom-right-radius: 16px; }
+    
+    td { 
+      padding: 16px; 
+      background: var(--table-row-bg); 
+      border-bottom: none; 
+      border-radius: 12px !important; 
+      transition: all 0.2s ease; 
+      color: var(--text-secondary);
+    }
+    
+    tr:hover td { 
+      background: var(--table-row-hover); 
+      transform: scale(1.01); 
+      box-shadow: 0 4px 12px rgba(14, 165, 233, 0.15); 
+    }
+    
+    input, select { 
+      background: var(--input-bg); 
+      border: 1px solid var(--input-border); 
+      color: var(--text-primary); 
+      border-radius: 14px; 
+      padding: 12px 16px; 
+      font-size: 0.95rem; 
+      transition: all 0.2s ease; 
+    }
+    
+    input:focus, select:focus { 
+      border-color: var(--input-focus); 
+      outline: none; 
+      box-shadow: 0 0 0 3px rgba(14, 165, 233, 0.2); 
+    }
+    
+    select option { 
+      background-color: var(--input-bg); 
+      color: var(--text-primary); 
+    }
+    
+    .nav-btn { 
+      transition: all 0.3s ease; 
+      border-radius: 14px; 
+      font-weight: 500; 
+      position: relative; 
+      overflow: hidden; 
+      cursor: pointer; 
+      color: var(--text-secondary);
+    }
+    
+    .nav-btn:hover { 
+      background: rgba(14, 165, 233, 0.15); 
+      transform: translateX(5px); 
+      color: var(--text-primary);
+    }
+    
+    .nav-btn.active { 
+      background: linear-gradient(90deg, rgba(14, 165, 233, 0.2), rgba(2, 132, 199, 0.15)); 
+      border-left: 4px solid #0ea5e9; 
+      box-shadow: 0 4px 12px rgba(14, 165, 233, 0.2); 
+      color: #0ea5e9;
+    }
+    
+    .nav-btn i { color: #0ea5e9; }
+    
+    .sidebar { 
+      background: var(--bg-sidebar); 
+      width: 280px; 
+      box-shadow: 4px 0 10px rgba(0, 0, 0, 0.1); 
+      border-right: 1px solid var(--sidebar-border); 
+    }
+    
+    .badge-present { background: rgba(16, 185, 129, 0.2); color: #10b981; }
+    .badge-live { background: rgba(239, 68, 68, 0.2); color: #ef4444; animation: pulse 2s infinite; }
+    
+    @keyframes pulse { 0%, 100% { opacity: 1; } 50% { opacity: 0.7; } }
+    
+    .spinner { 
+      border: 4px solid rgba(14, 165, 233, 0.2); 
+      border-left-color: #0ea5e9; 
+      border-radius: 50%; 
+      width: 50px; 
+      height: 50px; 
+      animation: spin 1s linear infinite; 
+    }
+    
+    @keyframes spin { to { transform: rotate(360deg); } }
+    
+    .lecture-card { 
+      background: var(--bg-card); 
+      backdrop-filter: blur(8px); 
+      border: 1px solid var(--border-color); 
+      border-radius: 24px; 
+      padding: 1.5rem; 
+      transition: all 0.3s ease; 
+    }
+    
+    .lecture-card:hover { 
+      border-color: #0ea5e9; 
+      transform: translateY(-4px); 
+      box-shadow: 0 20px 30px -10px rgba(14, 165, 233, 0.3); 
+    }
+    
+    .day-card { 
+      background: linear-gradient(135deg, rgba(14,165,233,0.15), rgba(2,132,199,0.08)); 
+      border-left: 4px solid #0ea5e9; 
+      border-radius: 12px; 
+      padding: 1.5rem; 
+    }
+    
+    .section-header { 
+      font-size: 2rem; 
+      font-weight: 700; 
+      background: linear-gradient(135deg, #0ea5e9, #38bdf8); 
+      background-clip: text; 
+      -webkit-background-clip: text; 
+      color: transparent; 
+      -webkit-text-fill-color: transparent; 
+      margin-bottom: 2rem; 
+      letter-spacing: -0.02em; 
+    }
+    
+    .hidden { display: none !important; }
+    
+    /* ============================================
+       PROFESSIONAL THEME TOGGLE BUTTON
+       ============================================ */
+    .theme-toggle-btn {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        padding: 8px 16px;
+        background: var(--bg-card);
+        border: 1px solid var(--border-color);
+        border-radius: 40px;
+        cursor: pointer;
+        transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        box-shadow: var(--card-shadow);
+    }
+    
+    .theme-toggle-btn:hover {
+        transform: translateY(-2px);
+        border-color: #0ea5e9;
+        box-shadow: 0 4px 12px rgba(14, 165, 233, 0.2);
+    }
+    
+    .theme-toggle-btn:active {
+        transform: scale(0.97);
+    }
+    
+    .theme-toggle-icon {
+        position: relative;
+        width: 20px;
+        height: 20px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+    }
+    
+    .theme-toggle-icon i {
+        position: absolute;
+        font-size: 1rem;
+        transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    }
+    
+    .sun-icon {
+        color: #f59e0b;
+        opacity: 1;
+        transform: rotate(0deg) scale(1);
+    }
+    
+    .moon-icon {
+        color: #818cf8;
+        opacity: 0;
+        transform: rotate(-90deg) scale(0.5);
+    }
+    
+    .theme-toggle-text {
+        font-size: 0.8rem;
+        font-weight: 500;
+        color: var(--text-secondary);
+        transition: color 0.3s ease;
+    }
+    
+    .theme-toggle-text::before {
+        content: "Light";
+    }
+    
+    /* Dark mode active state */
+    body.dark-mode .theme-toggle-btn {
+        background: var(--bg-card);
+        border-color: var(--border-color);
+    }
+    
+    body.dark-mode .sun-icon {
+        opacity: 0;
+        transform: rotate(90deg) scale(0.5);
+    }
+    
+    body.dark-mode .moon-icon {
+        opacity: 1;
+        transform: rotate(0deg) scale(1);
+    }
+    
+    body.dark-mode .theme-toggle-text {
+        color: var(--text-primary);
+    }
+    
+    body.dark-mode .theme-toggle-text::before {
+        content: "Dark";
+    }
+    
+    /* Date badge styling */
+    .date-badge {
+        background: var(--bg-card);
+        border-color: var(--border-color);
+        color: var(--text-primary);
+    }
+    
+    /* Admin Info Card */
+    #doctorInfo, .bg-slate-800\/50, .bg-slate-800 {
+        background: var(--bg-secondary) !important;
+        border-color: var(--border-color) !important;
+    }
+    
+    /* Modal Background */
+    #gradeModal, #activateLectureModal, #endLectureModal, #taPermissionsModal, #doctorConfirmationModal {
+        background: rgba(0, 0, 0, 0.8);
+    }
+    
+    /* Custom Toast */
+    #doctorCustomToast > div {
+        background: var(--bg-card);
+        border: 1px solid var(--border-color);
+        color: var(--text-primary);
+    }
+    
+    /* Scrollbar */
+    ::-webkit-scrollbar { width: 8px; height: 8px; }
+    ::-webkit-scrollbar-track { background: var(--border-color); border-radius: 4px; }
+    ::-webkit-scrollbar-thumb { background: #0ea5e9; border-radius: 4px; }
+    ::-webkit-scrollbar-thumb:hover { background: #38bdf8; }
+    
+    @media (max-width: 640px) { 
+      .info-grid { grid-template-columns: 1fr; gap: 1.25rem; } 
+      .theme-toggle-text { display: none; }
+      .theme-toggle-btn { padding: 8px 12px; }
+    }
+  </style>
+</head>
+<body class="min-h-screen light-mode">
+
+  <!-- Doctor Login Screen -->
+  <div id="doctorLoginScreen" class="fixed inset-0 flex items-center justify-center" style="background: var(--bg-primary);">
+    <div class="login-container rounded-2xl p-10 w-full max-w-md text-center shadow-2xl">
+      <div class="mb-8">
+        <div class="w-24 h-24 bg-gradient-to-br from-sky-500 to-blue-600 rounded-2xl mx-auto mb-6 flex items-center justify-center">
+          <i class="fas fa-stethoscope text-5xl text-white"></i>
+        </div>
+        <h1 class="text-4xl font-bold text-transparent bg-clip-text bg-gradient-to-r from-sky-400 to-blue-500">
+          Traxa Doctor
+        </h1>
+        <p class="text-gray-500 dark:text-gray-400 mt-3">Professional Doctor Dashboard</p>
+      </div>
+      
+      <form id="doctorLoginForm" class="space-y-6">
+        <div class="space-y-2 text-left">
+          <label class="text-sm font-medium" style="color: var(--text-secondary);">Username</label>
+          <div class="relative">
+            <i class="fas fa-user absolute left-4 top-4" style="color: var(--text-muted);"></i>
+            <input type="text" id="doctorUsername" placeholder="Enter username" required 
+                   class="w-full px-12 py-4 rounded-xl focus:ring-2 focus:ring-sky-500 text-base"/>
+          </div>
+        </div>
+        
+        <div class="space-y-2 text-left">
+          <label class="text-sm font-medium" style="color: var(--text-secondary);">Password</label>
+          <div class="relative">
+            <i class="fas fa-lock absolute left-4 top-4" style="color: var(--text-muted);"></i>
+            <input type="password" id="doctorPassword" placeholder="Enter password" required 
+                   class="w-full px-12 py-4 rounded-xl focus:ring-2 focus:ring-sky-500 text-base"/>
+          </div>
+        </div>
+        
+        <button type="submit" class="w-full btn-primary py-4 rounded-xl font-bold text-lg shadow-lg transition-all duration-300 flex items-center justify-center gap-3">
+          <i class="fas fa-sign-in-alt"></i>
+          <span>Login</span>
+        </button>
+      </form>
+      
+      <div id="loginLoading" class="hidden mt-6">
+        <div class="flex justify-center"><div class="spinner"></div></div>
+        <p class="text-gray-400 mt-3">Verifying credentials...</p>
+      </div>
+    </div>
+  </div>
+
+  <!-- Doctor Dashboard -->
+  <div id="doctorDashboard" class="hidden flex min-h-screen">
+    <!-- Sidebar -->
+    <div class="sidebar p-6 flex flex-col">
+      <div class="text-center mb-8">
+        <div class="w-20 h-20 bg-gradient-to-br from-sky-500 to-blue-600 rounded-2xl mx-auto mb-4 flex items-center justify-center">
+          <i class="fas fa-user-md text-3xl text-white"></i>
+        </div>
+        <div id="doctorInfo" class="p-4 rounded-xl" style="background: var(--bg-secondary); border: 1px solid var(--border-color);">
+          <p id="doctorName" class="font-bold text-lg text-sky-400"></p>
+          <p id="doctorSpecialty" class="text-sm" style="color: var(--text-muted);"></p>
+        </div>
+      </div>
+      
+      <nav class="space-y-2 flex-1">
+        <button data-section="overview" data-permission="ta.nav.overview" class="nav-btn w-full text-left p-4 rounded-xl transition-all duration-200 flex items-center gap-3 active">
+          <i class="fas fa-chart-pie w-6"></i>
+          <span class="font-medium">Overview</span>
+        </button>
+        <button data-section="subjects" data-permission="ta.nav.subjects" class="nav-btn w-full text-left p-4 rounded-xl transition-all duration-200 flex items-center gap-3">
+          <i class="fas fa-book w-6"></i>
+          <span class="font-medium">My Subjects</span>
+        </button>
+        <button data-section="lectures" data-permission="ta.nav.lectures" class="nav-btn w-full text-left p-4 rounded-xl transition-all duration-200 flex items-center gap-3">
+          <i class="fas fa-chalkboard-teacher w-6"></i>
+          <span class="font-medium">Weekly Lectures</span>
+        </button>
+        <button data-section="attendance" data-permission="ta.nav.attendance" class="nav-btn w-full text-left p-4 rounded-xl transition-all duration-200 flex items-center gap-3">
+          <i class="fas fa-fingerprint w-6"></i>
+          <span class="font-medium">Active Sessions</span>
+        </button>
+        <button data-section="reports" data-permission="ta.nav.reports" class="nav-btn w-full text-left p-4 rounded-xl transition-all duration-200 flex items-center gap-3">
+          <i class="fas fa-file-alt w-6"></i>
+          <span class="font-medium">Attendance Reports</span>
+        </button>
+        <button data-section="grading" data-permission="ta.nav.grading" class="nav-btn w-full text-left p-4 rounded-xl transition-all duration-200 flex items-center gap-3">
+          <i class="fas fa-graduation-cap w-6"></i>
+          <span class="font-medium">Student Grades</span>
+        </button>
+        <button data-section="settings" class="nav-btn w-full text-left p-4 rounded-xl transition-all duration-200 flex items-center gap-3 hidden">
+          <i class="fas fa-cog w-6"></i>
+          <span class="font-medium">Settings</span>
+        </button>
+      </nav>
+      
+      <button id="doctorLogout" class="w-full bg-red-600/20 hover:bg-red-600/40 text-red-400 py-4 rounded-xl font-bold transition-all duration-200 flex items-center justify-center gap-3 mt-6 border border-red-500/30">
+        <i class="fas fa-sign-out-alt"></i>
+        <span>Logout</span>
+      </button>
+    </div>
+
+    <!-- Main Content -->
+    <div class="flex-1 p-8 overflow-y-auto" style="background: var(--bg-primary);">
+      <div class="flex justify-between items-center mb-8">
+        <h1 id="doctorSectionTitle" class="section-header">Overview Dashboard</h1>
+        <div class="flex items-center gap-4">
+          <!-- Theme Toggle Button -->
+          <button id="themeToggleBtn" class="theme-toggle-btn" title="Toggle Light/Dark Mode">
+            <div class="theme-toggle-icon">
+              <i class="fas fa-sun sun-icon"></i>
+              <i class="fas fa-moon moon-icon"></i>
+            </div>
+            <span class="theme-toggle-text"></span>
+          </button>
+          <span class="px-5 py-3 rounded-xl shadow-lg border date-badge">
+            <i class="fas fa-calendar mr-2 text-sky-400"></i>
+            <span id="currentDateTime" class="font-medium"></span>
+          </span>
+        </div>
+      </div>
+
+      <!-- Loading Overlay -->
+      <div id="dashboardLoading" class="fixed inset-0 bg-black/90 flex items-center justify-center z-50 hidden">
+        <div class="text-center">
+          <div class="spinner mx-auto mb-6"></div>
+          <p class="text-2xl font-bold text-sky-400">Loading Data...</p>
+          <p class="text-gray-400 mt-3">Fetching subjects and lectures from database</p>
+        </div>
+      </div>
+
+      <!-- Overview Section -->
+      <div id="overviewSection">
+        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
+          <div class="stat-card"><div class="flex items-center justify-between"><div><p class="text-sm opacity-90">My Subjects</p><p id="totalSubjects" class="text-4xl font-bold mt-2">0</p></div><i class="fas fa-book text-5xl opacity-30"></i></div></div>
+          <div class="stat-card purple"><div class="flex items-center justify-between"><div><p class="text-sm opacity-90">Weekly Lectures</p><p id="totalLectures" class="text-4xl font-bold mt-2">0</p></div><i class="fas fa-calendar-week text-5xl opacity-30"></i></div></div>
+          <div class="stat-card green"><div class="flex items-center justify-between"><div><p class="text-sm opacity-90">Active Sessions</p><p id="activeSessions" class="text-4xl font-bold mt-2">0</p></div><i class="fas fa-play-circle text-5xl opacity-30"></i></div></div>
+          <div class="stat-card orange"><div class="flex items-center justify-between"><div><p class="text-sm opacity-90">Today's Attendance</p><p id="attendanceToday" class="text-4xl font-bold mt-2">0</p></div><i class="fas fa-users text-5xl opacity-30"></i></div></div>
+        </div>
+        <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+          <div class="card rounded-2xl p-6"><h3 class="text-xl font-bold mb-4 flex items-center gap-3"><i class="fas fa-chart-line text-sky-400"></i>Today's Schedule</h3><div id="todaysLectures" class="space-y-3"></div></div>
+          <div class="card rounded-2xl p-6"><h3 class="text-xl font-bold mb-4 flex items-center gap-3"><i class="fas fa-clock text-sky-400"></i>Recent Attendance</h3><div id="recentAttendance" class="space-y-3"></div></div>
+        </div>
+      </div>
+
+      <!-- Subjects Section -->
+      <div id="subjectsSection" class="hidden">
+        <div class="flex justify-between items-center mb-6">
+          <h2 class="text-2xl font-bold" style="color: var(--text-primary);">My Subjects</h2>
+          <div class="flex gap-4">
+            <input type="text" id="subjectSearch" placeholder="Search subjects..." class="px-4 py-3 rounded-xl focus:ring-2 focus:ring-sky-500 w-64"/>
+            <select id="subjectSemesterFilter" class="px-4 py-3 rounded-xl"><option value="">All Semesters</option><option value="1">Semester 1</option><option value="2">Semester 2</option></select>
+          </div>
+        </div>
+        <div id="subjectsList" class="table-container"></div>
+      </div>
+
+      <!-- Lectures Section -->
+      <div id="lecturesSection" class="hidden">
+        <div class="flex justify-between items-center mb-6">
+          <h2 class="text-2xl font-bold" style="color: var(--text-primary);">Weekly Lecture Schedule</h2>
+          <select id="lectureSemesterFilter" class="px-4 py-3 rounded-xl"><option value="">All Semesters</option><option value="1">Semester 1</option><option value="2">Semester 2</option></select>
+        </div>
+        <div class="flex gap-3 mb-6 overflow-x-auto pb-3">
+          <button onclick="filterByDay('all')" class="day-filter-btn px-6 py-3 bg-sky-600 hover:bg-sky-700 rounded-xl font-semibold shadow-lg transition-all">All Days</button>
+          <button onclick="filterByDay('Saturday')" class="day-filter-btn px-6 py-3 rounded-xl font-medium transition-all" style="background: var(--bg-secondary); border: 1px solid var(--border-color); color: var(--text-secondary);">Saturday</button>
+          <button onclick="filterByDay('Sunday')" class="day-filter-btn px-6 py-3 rounded-xl font-medium transition-all" style="background: var(--bg-secondary); border: 1px solid var(--border-color); color: var(--text-secondary);">Sunday</button>
+          <button onclick="filterByDay('Monday')" class="day-filter-btn px-6 py-3 rounded-xl font-medium transition-all" style="background: var(--bg-secondary); border: 1px solid var(--border-color); color: var(--text-secondary);">Monday</button>
+          <button onclick="filterByDay('Tuesday')" class="day-filter-btn px-6 py-3 rounded-xl font-medium transition-all" style="background: var(--bg-secondary); border: 1px solid var(--border-color); color: var(--text-secondary);">Tuesday</button>
+          <button onclick="filterByDay('Wednesday')" class="day-filter-btn px-6 py-3 rounded-xl font-medium transition-all" style="background: var(--bg-secondary); border: 1px solid var(--border-color); color: var(--text-secondary);">Wednesday</button>
+          <button onclick="filterByDay('Thursday')" class="day-filter-btn px-6 py-3 rounded-xl font-medium transition-all" style="background: var(--bg-secondary); border: 1px solid var(--border-color); color: var(--text-secondary);">Thursday</button>
+        </div>
+        <div id="weeklySchedule" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6"></div>
+      </div>
+
+      <!-- Active Sessions Section -->
+      <div id="attendanceSection" class="hidden">
+        <div class="flex justify-between items-center mb-6">
+          <h2 class="text-2xl font-bold" style="color: var(--text-primary);">Active Sessions</h2>
+          <div class="flex items-center gap-3">
+            <span class="px-5 py-3 bg-red-600/20 text-red-400 rounded-xl border border-red-500/30 flex items-center gap-2"><i class="fas fa-circle animate-pulse"></i><span>Live Sessions</span></span>
+            <span id="syncIndicator" class="px-3 py-2 rounded-xl text-xs flex items-center gap-1" style="background: var(--bg-secondary); color: var(--text-muted);"><i class="fas fa-sync-alt"></i><span>Synced</span></span>
+          </div>
+        </div>
+        <div id="activeLecturesList" class="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-8"></div>
+        <div id="attendanceRecordsTable" class="table-container"></div>
+      </div>
+
+      <!-- Reports Section -->
+      <div id="reportsSection" class="hidden">
+        <h2 class="text-2xl font-bold mb-6" style="color: var(--text-primary);">Attendance Reports</h2>
+        <div class="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-8">
+          <div class="card rounded-2xl p-6"><div class="flex items-center gap-4"><div class="w-14 h-14 bg-sky-500/20 rounded-xl flex items-center justify-center"><i class="fas fa-users text-3xl text-sky-400"></i></div><div><p class="text-sm" style="color: var(--text-muted);">Total Attendance</p><p id="totalAttendanceCount" class="text-3xl font-bold text-sky-400">0</p></div></div></div>
+          <div class="card rounded-2xl p-6"><div class="flex items-center gap-4"><div class="w-14 h-14 bg-green-500/20 rounded-xl flex items-center justify-center"><i class="fas fa-check-circle text-3xl text-green-400"></i></div><div><p class="text-sm" style="color: var(--text-muted);">Present Rate</p><p id="presentRate" class="text-3xl font-bold text-green-400">0%</p></div></div></div>
+          <div class="card rounded-2xl p-6"><div class="flex items-center gap-4"><div class="w-14 h-14 bg-purple-500/20 rounded-xl flex items-center justify-center"><i class="fas fa-book text-3xl text-purple-400"></i></div><div><p class="text-sm" style="color: var(--text-muted);">Total Subjects</p><p id="reportSubjectsCount" class="text-3xl font-bold text-purple-400">0</p></div></div></div>
+        </div>
+        <div class="flex gap-4 mb-6 flex-wrap">
+          <select id="reportSubjectFilter" class="px-4 py-3 rounded-xl min-w-[200px]"><option value="">All Subjects</option></select>
+          <select id="reportLevelFilter" class="px-4 py-3 rounded-xl min-w-[150px]"><option value="">All Levels</option></select>
+          <input type="date" id="reportDateFilter" class="px-4 py-3 rounded-xl"/>
+          <button onclick="exportAttendanceReport()" class="btn-primary px-6 py-3 rounded-xl flex items-center gap-2 font-semibold"><i class="fas fa-download"></i> Export PDF</button>
+        </div>
+        <div id="attendanceReportsTable" class="table-container"></div>
+      </div>
+
+      <!-- Student Grades Section -->
+      <div id="gradingSection" class="hidden">
+        <div class="flex justify-between items-center mb-6"><h2 class="text-2xl font-bold" style="color: var(--text-primary);">Student Grades Management</h2><span class="px-5 py-3 bg-purple-600/20 text-purple-400 rounded-xl border border-purple-500/30 flex items-center gap-2"><i class="fas fa-chart-line"></i><span>Grading System</span></span></div>
+        <div class="mb-8"><h3 class="text-xl font-bold mb-4 text-purple-400">Your Subjects</h3><div id="subjectGradesButtons" class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4"></div></div>
+        <div id="selectedSubjectInfo" class="hidden">
+          <div class="flex justify-between items-center mb-4"><div><h3 id="selectedSubjectTitle" class="text-xl font-bold text-purple-400"></h3><p id="selectedSubjectDetails" class="text-sm" style="color: var(--text-muted);"></p></div><button onclick="exportSubjectGrades()" class="btn-primary px-4 py-2 rounded-lg flex items-center gap-2 text-sm"><i class="fas fa-download"></i> Export Grades</button></div>
+          <div class="flex justify-between items-center mb-4"><div><h3 id="selectedSubjectTitle2" class="text-xl font-bold text-purple-400"></h3><p id="selectedSubjectDetails2" class="text-sm" style="color: var(--text-muted);"></p></div><div class="flex gap-2"><button onclick="forceReorderStudents()" class="bg-indigo-600 hover:bg-indigo-700 px-4 py-2 rounded-lg flex items-center gap-2 text-sm"><i class="fas fa-sort-amount-down"></i> Force Reorder</button><button onclick="downloadExcelTemplate()" class="bg-yellow-600 hover:bg-yellow-700 px-4 py-2 rounded-lg flex items-center gap-2 text-sm"><i class="fas fa-file-excel"></i> Download Template</button><button onclick="importGradesExcel()" class="bg-green-600 hover:bg-green-700 px-4 py-2 rounded-lg flex items-center gap-2 text-sm"><i class="fas fa-file-import"></i> Import Excel</button><button onclick="exportGradesExcel()" class="bg-blue-600 hover:bg-blue-700 px-4 py-2 rounded-lg flex items-center gap-2 text-sm"><i class="fas fa-file-export"></i> Export Excel</button></div></div>
+          <input type="file" id="excelFileInput" accept=".xlsx, .xls, .csv" class="hidden" />
+          <div id="subjectStats" class="grid grid-cols-2 md:grid-cols-5 gap-3 mb-6">
+            <div class="bg-purple-600/20 p-3 rounded-xl border border-purple-500/30 text-center"><p class="text-xs" style="color: var(--text-muted);">Total Students</p><p id="statTotalStudents" class="text-xl font-bold text-purple-400">0</p></div>
+            <div class="bg-blue-600/20 p-3 rounded-xl border border-blue-500/30 text-center"><p class="text-xs" style="color: var(--text-muted);">Average</p><p id="statAverage" class="text-xl font-bold text-blue-400">0</p></div>
+            <div class="bg-green-600/20 p-3 rounded-xl border border-green-500/30 text-center"><p class="text-xs" style="color: var(--text-muted);">Passed</p><p id="statPassed" class="text-xl font-bold text-green-400">0</p></div>
+            <div class="bg-red-600/20 p-3 rounded-xl border border-red-500/30 text-center"><p class="text-xs" style="color: var(--text-muted);">Failed</p><p id="statFailed" class="text-xl font-bold text-red-400">0</p></div>
+            <div class="bg-yellow-600/20 p-3 rounded-xl border border-yellow-500/30 text-center"><p class="text-xs" style="color: var(--text-muted);">Max Grade</p><p id="statMax" class="text-xl font-bold text-yellow-400">0</p></div>
+          </div>
+          <div id="subjectStudentsList" class="table-container"></div>
+        </div>
+      </div>
+
+      <!-- Settings Section -->
+      <div id="settingsSection" class="hidden">
+        <div class="flex justify-between items-center mb-6"><h2 class="text-2xl font-bold" style="color: var(--text-primary);">Settings & Management</h2><span class="px-5 py-3 bg-purple-600/20 text-purple-400 rounded-xl border border-purple-500/30 flex items-center gap-2"><i class="fas fa-shield-alt"></i><span>TA Management</span></span></div>
+        <div class="bg-gradient-to-r from-sky-600 to-blue-600 rounded-2xl p-6 mb-8"><div class="flex items-center gap-4"><div class="w-16 h-16 bg-white/20 rounded-2xl flex items-center justify-center"><i class="fas fa-user-md text-4xl text-white"></i></div><div><h3 class="text-2xl font-bold" id="doctorProfileName">Dr. Name</h3><p class="text-sm opacity-90 mt-1" id="doctorProfileEmail">email@university.edu</p><p class="text-xs opacity-75 mt-2" id="doctorProfileId">ID: 1</p></div></div></div>
+        <div class="mb-8"><h3 class="text-xl font-bold mb-4 flex items-center gap-2"><i class="fas fa-users text-sky-400"></i>Your Teaching Assistants</h3><div id="taListContainer" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4"></div></div>
+        <div id="taPermissionsModal" class="fixed inset-0 bg-black/80 flex items-center justify-center z-50 hidden"><div class="bg-slate-800 rounded-2xl w-full max-w-3xl max-h-[90vh] overflow-y-auto p-6"><div class="flex justify-between items-center mb-6 sticky top-0 bg-slate-800 pb-4 border-b border-white/10"><div><h2 class="text-2xl font-bold text-sky-400">TA Permissions Control</h2><p id="taPermissionsName" class="text-sm text-gray-400 mt-1"></p></div><button onclick="closeTAPermissionsModal()" class="text-gray-400 hover:text-white text-2xl">&times;</button></div>
+          <div class="space-y-6">
+            <div class="bg-slate-900/50 rounded-xl p-4"><h3 class="text-lg font-bold mb-3 text-sky-400 flex items-center gap-2"><i class="fas fa-bars"></i>Navigation Sidebar</h3><p class="text-xs text-gray-400 mb-3">Control which sections appear in the sidebar</p><div class="grid grid-cols-1 md:grid-cols-2 gap-3">
+              <label class="flex items-center justify-between p-3 bg-slate-800 rounded-lg hover:bg-slate-700 transition-colors"><span class="flex items-center gap-2"><i class="fas fa-chart-pie text-sky-400 w-5"></i>Overview Dashboard</span><input type="checkbox" id="perm_nav_overview" class="w-5 h-5 accent-sky-500"></label>
+              <label class="flex items-center justify-between p-3 bg-slate-800 rounded-lg hover:bg-slate-700 transition-colors"><span class="flex items-center gap-2"><i class="fas fa-book text-sky-400 w-5"></i>Subjects</span><input type="checkbox" id="perm_nav_subjects" class="w-5 h-5 accent-sky-500"></label>
+              <label class="flex items-center justify-between p-3 bg-slate-800 rounded-lg hover:bg-slate-700 transition-colors"><span class="flex items-center gap-2"><i class="fas fa-chalkboard-teacher text-sky-400 w-5"></i>Lectures</span><input type="checkbox" id="perm_nav_lectures" class="w-5 h-5 accent-sky-500"></label>
+              <label class="flex items-center justify-between p-3 bg-slate-800 rounded-lg hover:bg-slate-700 transition-colors"><span class="flex items-center gap-2"><i class="fas fa-fingerprint text-sky-400 w-5"></i>Active Sessions</span><input type="checkbox" id="perm_nav_attendance" class="w-5 h-5 accent-sky-500"></label>
+              <label class="flex items-center justify-between p-3 bg-slate-800 rounded-lg hover:bg-slate-700 transition-colors"><span class="flex items-center gap-2"><i class="fas fa-file-alt text-sky-400 w-5"></i>Attendance Reports</span><input type="checkbox" id="perm_nav_reports" class="w-5 h-5 accent-sky-500"></label>
+              <label class="flex items-center justify-between p-3 bg-slate-800 rounded-lg hover:bg-slate-700 transition-colors"><span class="flex items-center gap-2"><i class="fas fa-graduation-cap text-sky-400 w-5"></i>Student Grades</span><input type="checkbox" id="perm_nav_grading" class="w-5 h-5 accent-sky-500"></label>
+            </div></div>
+            <div class="bg-slate-900/50 rounded-xl p-4"><h3 class="text-lg font-bold mb-3 text-green-400 flex items-center gap-2"><i class="fas fa-calendar-check"></i>Session Controls</h3><p class="text-xs text-gray-400 mb-3">Control attendance session buttons</p><div class="grid grid-cols-1 md:grid-cols-2 gap-3">
+              <label class="flex items-center justify-between p-3 bg-slate-800 rounded-lg hover:bg-slate-700 transition-colors"><span class="flex items-center gap-2"><i class="fas fa-play text-green-400 w-5"></i>Activate Session</span><input type="checkbox" id="perm_attendance_start" class="w-5 h-5 accent-green-500"></label>
+              <label class="flex items-center justify-between p-3 bg-slate-800 rounded-lg hover:bg-slate-700 transition-colors"><span class="flex items-center gap-2"><i class="fas fa-stop text-red-400 w-5"></i>End Session</span><input type="checkbox" id="perm_attendance_end" class="w-5 h-5 accent-green-500"></label>
+            </div></div>
+            <div class="bg-slate-900/50 rounded-xl p-4"><h3 class="text-lg font-bold mb-3 text-purple-400 flex items-center gap-2"><i class="fas fa-chart-bar"></i>Reports Controls</h3><p class="text-xs text-gray-400 mb-3">Control report viewing and exporting</p><div class="grid grid-cols-1 md:grid-cols-2 gap-3">
+              <label class="flex items-center justify-between p-3 bg-slate-800 rounded-lg hover:bg-slate-700 transition-colors"><span class="flex items-center gap-2"><i class="fas fa-eye text-blue-400 w-5"></i>View Reports</span><input type="checkbox" id="perm_reports_view" class="w-5 h-5 accent-purple-500"></label>
+              <label class="flex items-center justify-between p-3 bg-slate-800 rounded-lg hover:bg-slate-700 transition-colors"><span class="flex items-center gap-2"><i class="fas fa-download text-purple-400 w-5"></i>Export Reports</span><input type="checkbox" id="perm_reports_export" class="w-5 h-5 accent-purple-500"></label>
+            </div></div>
+          </div>
+          <div class="flex justify-end gap-3 mt-6 pt-4 border-t border-white/10"><button onclick="resetTAPermissions()" class="px-4 py-2 bg-yellow-600 hover:bg-yellow-700 rounded-lg text-sm flex items-center gap-2"><i class="fas fa-undo"></i>Reset to Default</button><button onclick="saveTAPermissions()" class="px-4 py-2 bg-green-600 hover:bg-green-700 rounded-lg text-sm flex items-center gap-2"><i class="fas fa-save"></i>Save Permissions</button><button onclick="closeTAPermissionsModal()" class="px-4 py-2 bg-slate-700 hover:bg-slate-600 rounded-lg text-sm">Cancel</button></div>
+        </div></div>
+      </div>
+
+      <!-- Grade Entry Modal -->
+      <div id="gradeModal" class="fixed inset-0 bg-black/80 flex items-center justify-center z-50 hidden"><div class="bg-slate-800 rounded-2xl w-full max-w-md mx-4 p-6 border border-purple-500/30 shadow-2xl"><div class="flex justify-between items-center mb-4"><h2 class="text-xl font-bold text-purple-400 flex items-center gap-2"><i class="fas fa-pen-alt"></i>Edit Grades</h2><button onclick="closeGradeModal()" class="text-gray-400 hover:text-white text-2xl leading-none">&times;</button></div><div id="gradeStudentInfo" class="mb-4 p-3 bg-slate-900/50 rounded-xl border border-slate-700"><p id="gradeStudentName" class="font-bold text-base text-white"></p><p id="gradeStudentDetails" class="text-xs text-gray-400 mt-1"></p></div><form id="gradeForm" class="space-y-3"><input type="hidden" id="gradeStudentId"><input type="hidden" id="gradeSubjectId"><input type="hidden" id="gradeId"><div class="grid grid-cols-5 gap-2"><div><label class="block text-xs font-medium text-gray-300 mb-1 text-center">Mid</label><label class="block text-[10px] text-gray-400 mb-1 text-center">(10)</label><input type="number" id="gradeMidterm" min="0" max="10" step="0.5" value="0" class="w-full px-2 py-2 text-sm bg-slate-700 rounded-lg border border-slate-600 focus:border-purple-500 text-center" oninput="validateGrade(this, 10)"></div><div><label class="block text-xs font-medium text-gray-300 mb-1 text-center">Oral</label><label class="block text-[10px] text-gray-400 mb-1 text-center">(5)</label><input type="number" id="gradeOral" min="0" max="5" step="0.5" value="0" class="w-full px-2 py-2 text-sm bg-slate-700 rounded-lg border border-slate-600 focus:border-purple-500 text-center" oninput="validateGrade(this, 5)"></div><div><label class="block text-xs font-medium text-gray-300 mb-1 text-center">Prac</label><label class="block text-[10px] text-gray-400 mb-1 text-center">(20)</label><input type="number" id="gradePractical" min="0" max="20" step="0.5" value="0" class="w-full px-2 py-2 text-sm bg-slate-700 rounded-lg border border-slate-600 focus:border-purple-500 text-center" oninput="validateGrade(this, 20)"></div><div><label class="block text-xs font-medium text-gray-300 mb-1 text-center">Att</label><label class="block text-[10px] text-gray-400 mb-1 text-center">(5)</label><input type="number" id="gradeAttendance" min="0" max="5" step="0.5" value="0" class="w-full px-2 py-2 text-sm bg-slate-700 rounded-lg border border-slate-600 focus:border-purple-500 text-center" oninput="validateGrade(this, 5)"></div><div><label class="block text-xs font-medium text-gray-300 mb-1 text-center">Assgn</label><label class="block text-[10px] text-gray-400 mb-1 text-center">(10)</label><input type="number" id="gradeAssignment" min="0" max="10" step="0.5" value="0" class="w-full px-2 py-2 text-sm bg-slate-700 rounded-lg border border-slate-600 focus:border-purple-500 text-center" oninput="validateGrade(this, 10)"></div></div><div class="bg-slate-900/50 p-3 rounded-lg mt-3 flex justify-between items-center"><span class="text-sm text-gray-300">Total:</span><span id="gradeTotalPreview" class="text-xl font-bold text-purple-400">0.0</span></div><div class="flex gap-3 pt-3"><button type="submit" class="flex-1 bg-purple-600 hover:bg-purple-700 py-2.5 rounded-lg text-sm font-semibold transition-colors"><i class="fas fa-save mr-1"></i> Save</button><button type="button" onclick="closeGradeModal()" class="flex-1 bg-slate-700 hover:bg-slate-600 py-2.5 rounded-lg text-sm font-semibold transition-colors"><i class="fas fa-times mr-1"></i> Cancel</button></div></form></div></div>
+    </div>
+  </div>
+
+  <!-- Lecture Activation Modal -->
+  <div id="activateLectureModal" class="fixed inset-0 bg-black/90 flex items-center justify-center z-50 hidden"><div class="bg-slate-800 rounded-2xl w-full max-w-2xl p-8 border border-sky-500/30 shadow-2xl"><div class="flex justify-between items-center mb-6"><h2 class="text-2xl font-bold text-sky-400">Activate Lecture</h2><button onclick="closeActivateModal()" class="text-gray-400 hover:text-white text-3xl">&times;</button></div><div id="lectureDetails" class="mb-6 p-5 bg-slate-900/50 rounded-xl border border-slate-700"></div><div class="bg-gradient-to-r from-sky-600 to-blue-600 rounded-xl p-6 mb-6"><h3 class="text-lg font-bold mb-3 flex items-center gap-2"><i class="fas fa-qrcode text-2xl"></i>Session QR Code</h3><p class="text-sm opacity-90 mb-4">Students can scan this QR code to mark attendance</p><div id="sessionQRCode" class="flex justify-center bg-white p-5 rounded-xl"></div><div class="mt-4 text-center"><p class="text-sm">Session ID: <span id="sessionIdDisplay" class="font-mono bg-black/30 px-3 py-1.5 rounded-lg"></span></p><p class="text-xs mt-3 opacity-75">Valid for: <span id="sessionTimer">60:00</span> minutes</p></div></div><div class="flex gap-4"><button onclick="startLectureSession()" class="flex-1 bg-green-600 hover:bg-green-700 py-4 rounded-xl font-bold transition-all duration-200 flex items-center justify-center gap-2"><i class="fas fa-play"></i>Start Session</button><button onclick="closeActivateModal()" class="flex-1 bg-slate-700 hover:bg-slate-600 py-4 rounded-xl font-bold">Cancel</button></div></div></div>
+
+  <!-- End Lecture Modal -->
+  <div id="endLectureModal" class="fixed inset-0 bg-black/90 flex items-center justify-center z-50 hidden"><div class="bg-slate-800 rounded-2xl w-full max-w-md p-8 border border-red-500/30"><div class="text-center"><div class="w-20 h-20 bg-red-500/20 rounded-full mx-auto mb-6 flex items-center justify-center"><i class="fas fa-stop-circle text-5xl text-red-500"></i></div><h2 class="text-2xl font-bold mb-3">End Session</h2><p class="text-gray-400 mb-6">Are you sure you want to end this session?</p><div id="endLectureInfo" class="bg-slate-900/50 p-5 rounded-xl mb-6 border border-slate-700"></div><div class="flex gap-4"><button onclick="confirmEndLecture()" class="flex-1 bg-red-600 hover:bg-red-700 py-3 rounded-xl font-bold">Yes, End Session</button><button onclick="closeEndModal()" class="flex-1 bg-slate-700 hover:bg-slate-600 py-3 rounded-xl font-bold">Cancel</button></div></div></div></div>
+
+  <!-- Custom Confirmation Modal -->
+  <div id="doctorConfirmationModal" class="fixed inset-0 bg-black/70 flex items-center justify-center z-[9999] hidden"><div class="bg-slate-900 rounded-2xl w-full max-w-md p-8 border border-sky-500/30 shadow-2xl transform transition-all duration-300 scale-95" id="doctorConfirmationModalContent"><div class="text-center mb-6"><div class="w-20 h-20 mx-auto mb-4 rounded-full flex items-center justify-center"><i id="doctorConfirmationIcon" class="fas fa-exclamation-triangle text-5xl text-yellow-400"></i></div><h3 id="doctorConfirmationTitle" class="text-2xl font-bold text-white mb-2">Confirm Action</h3><p id="doctorConfirmationMessage" class="text-gray-300 text-base"></p></div><div id="doctorConfirmationCommentSection" class="mb-6 hidden"><label for="doctorConfirmationComment" class="block text-sm font-medium text-gray-300 mb-2"><i class="fas fa-pen mr-1"></i> Please provide a comment:</label><textarea id="doctorConfirmationComment" rows="3" class="w-full px-4 py-3 bg-slate-800 rounded-xl border border-slate-600 focus:border-sky-500 focus:ring-1 focus:ring-sky-500 text-white text-sm" placeholder="Enter your comment here..."></textarea><p id="doctorCommentError" class="text-red-400 text-xs mt-1 hidden">Comment is required</p></div><div class="flex gap-4"><button id="doctorConfirmCancelBtn" class="flex-1 bg-gray-700 hover:bg-gray-600 text-white py-3 rounded-xl font-semibold transition-all duration-200"><i class="fas fa-times mr-2"></i> Cancel</button><button id="doctorConfirmActionBtn" class="flex-1 bg-gradient-to-r from-sky-500 to-blue-600 hover:from-sky-600 hover:to-blue-700 text-white py-3 rounded-xl font-semibold transition-all duration-200"><i class="fas fa-check mr-2"></i> Confirm</button></div></div></div>
+
+  <!-- Custom Toast Notification -->
+  <div id="doctorCustomToast" class="fixed bottom-6 right-6 z-[9999] hidden"><div class="px-6 py-4 rounded-xl shadow-2xl flex items-center gap-4 toast"><i id="doctorCustomToastIcon" class="text-2xl"></i><span id="doctorCustomToastMessage" class="text-base"></span></div></div>
+
+<script src="script_doc.js"></script>
+<script>
+  // ============================================
+  // PROFESSIONAL THEME TOGGLE (Light/Dark Mode)
+  // ============================================
+  const themeToggleBtn = document.getElementById('themeToggleBtn');
+  const body = document.body;
+  
+  // Check for saved theme preference
+  const savedTheme = localStorage.getItem('doctorTheme');
+  if (savedTheme === 'dark') {
+    body.classList.remove('light-mode');
+    body.classList.add('dark-mode');
+  } else {
+    body.classList.add('light-mode');
+    body.classList.remove('dark-mode');
+  }
+  
+  // Theme toggle event with animation
+  if (themeToggleBtn) {
+    themeToggleBtn.addEventListener('click', function() {
+      // Add ripple effect
+      this.style.transform = 'scale(0.97)';
+      setTimeout(() => {
+        this.style.transform = '';
+      }, 150);
+      
+      if (body.classList.contains('light-mode')) {
+        body.classList.remove('light-mode');
+        body.classList.add('dark-mode');
+        localStorage.setItem('doctorTheme', 'dark');
+        if (typeof showDoctorToast === 'function') {
+          showDoctorToast('🌙 Dark mode activated', 'success');
+        }
+      } else {
+        body.classList.remove('dark-mode');
+        body.classList.add('light-mode');
+        localStorage.setItem('doctorTheme', 'light');
+        if (typeof showDoctorToast === 'function') {
+          showDoctorToast('☀️ Light mode activated', 'success');
+        }
+      }
+    });
+  }
+  
+  // Update date time function
+  function updateDateTime() {
+    const now = new Date();
+    const formatted = now.toLocaleString('en-US', {
+      weekday: 'long',
+      year: 'numeric',
+      month: 'long',
+      day: 'numeric',
+      hour: '2-digit',
+      minute: '2-digit',
+      second: '2-digit'
+    });
+    const dateTimeElement = document.getElementById('currentDateTime');
+    if (dateTimeElement) {
+      dateTimeElement.textContent = formatted;
+    }
+  }
+  
+  setInterval(updateDateTime, 1000);
+  updateDateTime();
+</script>
+              
+</body>
+</html>

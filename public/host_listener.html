@@ -1,0 +1,412 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Attendance System - Host Listener</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: system-ui, -apple-system, sans-serif;
+            background: #0f172a;
+            color: white;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            min-height: 100vh;
+            margin: 0;
+            padding: 20px;
+        }
+        
+        .container {
+            background: #1e293b;
+            padding: 2rem;
+            border-radius: 1rem;
+            text-align: center;
+            border: 1px solid #334155;
+            max-width: 500px;
+            box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.5);
+        }
+        
+        h1 {
+            color: #0ea5e9;
+            margin-bottom: 1rem;
+            font-size: 2rem;
+        }
+        
+        .status {
+            margin: 1.5rem 0;
+            padding: 1rem;
+            border-radius: 0.75rem;
+            background: #0f172a;
+            font-size: 1.1rem;
+            border: 1px solid #334155;
+            transition: all 0.3s ease;
+        }
+        
+        .status.connected {
+            border-left: 4px solid #10b981;
+        }
+        
+        .status.disconnected {
+            border-left: 4px solid #ef4444;
+        }
+        
+        .connected-text {
+            color: #10b981;
+        }
+        
+        .disconnected-text {
+            color: #ef4444;
+        }
+        
+        .info {
+            background: #334155;
+            padding: 1rem;
+            border-radius: 0.75rem;
+            margin-top: 1rem;
+            font-size: 0.9rem;
+            color: #cbd5e1;
+            text-align: left;
+        }
+        
+        .info i {
+            color: #0ea5e9;
+            margin-right: 0.5rem;
+            width: 20px;
+        }
+        
+        .ip-address {
+            background: #0f172a;
+            padding: 0.75rem;
+            border-radius: 0.75rem;
+            font-family: monospace;
+            color: #0ea5e9;
+            margin: 1rem 0;
+            border: 1px solid #0ea5e9;
+            font-size: 1.1rem;
+        }
+        
+        .camera-indicator {
+            background: #10b98120;
+            border: 1px solid #10b981;
+            color: #10b981;
+            padding: 0.75rem;
+            border-radius: 0.75rem;
+            margin: 1rem 0;
+            font-size: 0.9rem;
+            display: none;
+            align-items: center;
+            justify-content: center;
+            gap: 0.5rem;
+        }
+        
+        .camera-indicator.visible {
+            display: flex;
+        }
+        
+        .camera-indicator i {
+            animation: pulse 2s infinite;
+        }
+        
+        @keyframes pulse {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.5; }
+        }
+        
+        .footer {
+            margin-top: 1rem;
+            font-size: 0.8rem;
+            color: #64748b;
+        }
+    </style>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
+</head>
+<body>
+    <div class="container">
+        <i class="fas fa-server text-5xl text-sky-400 mb-4"></i>
+        <h1>Host Camera Listener</h1>
+        <p class="text-gray-400">This page must remain open on the server machine.</p>
+        
+        <div class="ip-address" id="ipAddress">
+            <i class="fas fa-network-wired mr-2"></i>
+            <span id="ipDisplay">Loading...</span>
+        </div>
+        
+        <div class="status" id="status">
+            <i class="fas fa-circle-notch fa-spin mr-2"></i>
+            <span id="statusText">Connecting to server...</span>
+        </div>
+        
+        <div class="camera-indicator" id="cameraIndicator">
+            <i class="fas fa-camera"></i>
+            <span id="cameraIndicatorText">Camera window is open</span>
+        </div>
+        
+        <div class="info">
+            <p><i class="fas fa-check-circle text-green-400"></i> <strong>This device is the camera host</strong></p>
+            <p><i class="fas fa-clock"></i> <span id="lastRequest">No requests yet</span></p>
+            <p><i class="fas fa-wifi"></i> WebSocket: <span id="wsStatus" class="text-yellow-400">Connecting...</span></p>
+            <p><i class="fas fa-window-restore"></i> Camera windows: <span id="cameraCount">0</span></p>
+        </div>
+
+        <div class="footer">
+            <i class="fas fa-shield-alt"></i>
+            Stable connection • No auto-refresh
+        </div>
+    </div>
+
+    <script>
+        // ============================================
+        // HOST LISTENER - STABLE VERSION - WITH WSS SUPPORT
+        // ============================================
+        
+        // عناصر الصفحة
+        const statusEl = document.getElementById('status');
+        const statusText = document.getElementById('statusText');
+        const ipDisplayEl = document.getElementById('ipDisplay');
+        const lastRequestEl = document.getElementById('lastRequest');
+        const wsStatusEl = document.getElementById('wsStatus');
+        const cameraCountEl = document.getElementById('cameraCount');
+        const cameraIndicator = document.getElementById('cameraIndicator');
+        const cameraIndicatorText = document.getElementById('cameraIndicatorText');
+
+        // المتغيرات العامة
+        let ws = null;
+        let reconnectAttempts = 0;
+        const maxReconnectAttempts = 5;
+        let cameraWindows = new Set();
+        let reconnectTimer = null;
+        let healthCheckTimer = null;
+
+        // معلومات السيرفر
+        const serverHost = window.location.hostname;
+        // ✅ تحديد البروتوكول المناسب (wss:// للـ HTTPS، ws:// للـ HTTP)
+        // ✅ إجبار استخدام ws:// بغض النظر عن البروتوكول (لأن WSS لا يعمل)
+        const protocol = 'ws:';
+        const wsUrl = `${protocol}//${serverHost}:3001`;
+
+        ipDisplayEl.textContent = serverHost;
+
+        console.log(`🚀 Starting Host Listener (Stable Mode)`);
+        console.log(`🔌 WebSocket URL: ${wsUrl}`);
+        console.log(`🔐 Page protocol: ${window.location.protocol}`);
+
+        // ============================================
+        // تحديث حالة الاتصال
+        // ============================================
+        function updateConnectionStatus(isConnected, message) {
+            if (isConnected) {
+                statusEl.classList.remove('disconnected');
+                statusEl.classList.add('connected');
+                statusText.innerHTML = `<i class="fas fa-check-circle mr-2 connected-text"></i> ${message}`;
+                wsStatusEl.innerHTML = '<span class="text-green-400">Connected</span>';
+            } else {
+                statusEl.classList.remove('connected');
+                statusEl.classList.add('disconnected');
+                statusText.innerHTML = `<i class="fas fa-exclamation-circle mr-2 disconnected-text"></i> ${message}`;
+                wsStatusEl.innerHTML = '<span class="text-red-400">Disconnected</span>';
+            }
+        }
+
+        // ============================================
+        // تحديث عداد الكاميرات
+        // ============================================
+        function updateCameraCount() {
+            const count = cameraWindows.size;
+            cameraCountEl.textContent = count;
+            
+            if (count > 0) {
+                cameraIndicator.classList.add('visible');
+                cameraIndicatorText.textContent = count === 1 ? 'Camera window is open' : `${count} camera windows open`;
+            } else {
+                cameraIndicator.classList.remove('visible');
+            }
+        }
+
+        // ============================================
+        // فتح نافذة الكاميرا
+        // ============================================
+        function openCameraWindow(url) {
+            console.log('📷 Opening camera window:', url);
+            
+            try {
+                const cameraWindow = window.open(url, 'AttendanceCamera', 'width=1400,height=900,menubar=no,toolbar=no,location=no,status=no');
+                
+                if (!cameraWindow || cameraWindow.closed) {
+                    console.error('❌ Could not open camera window');
+                    lastRequestEl.innerHTML = '<i class="fas fa-exclamation-triangle text-red-400"></i> Failed to open camera - check popup blocker';
+                    return false;
+                }
+                
+                // إضافة النافذة للمجموعة
+                cameraWindows.add(cameraWindow);
+                updateCameraCount();
+                
+                // تحديث آخر طلب
+                const now = new Date().toLocaleTimeString();
+                lastRequestEl.innerHTML = `<i class="fas fa-camera text-green-400"></i> Camera opened at ${now}`;
+                
+                // مراقبة إغلاق النافذة
+                const checkClosed = setInterval(() => {
+                    if (cameraWindow.closed) {
+                        cameraWindows.delete(cameraWindow);
+                        clearInterval(checkClosed);
+                        updateCameraCount();
+                        console.log('🔒 Camera window closed');
+                    }
+                }, 1000);
+                
+                return true;
+                
+            } catch (error) {
+                console.error('Error opening camera:', error);
+                lastRequestEl.innerHTML = '<i class="fas fa-exclamation-triangle text-red-400"></i> Error opening camera';
+                return false;
+            }
+        }
+
+        // ============================================
+        // الاتصال بـ WebSocket (يدعم WSS)
+        // ============================================
+        function connectWebSocket() {
+            // إلغاء أي محاولة إعادة اتصال سابقة
+            if (reconnectTimer) {
+                clearTimeout(reconnectTimer);
+                reconnectTimer = null;
+            }
+
+            try {
+                console.log(`🔌 Connecting to WebSocket: ${wsUrl}`);
+                ws = new WebSocket(wsUrl);
+
+                ws.onopen = () => {
+                    console.log('✅ WebSocket connected');
+                    updateConnectionStatus(true, 'Connected to server');
+                    reconnectAttempts = 0;
+                    
+                    // تحديث آخر طلب
+                    lastRequestEl.innerHTML = '<i class="fas fa-clock"></i> Waiting for requests...';
+                };
+
+                ws.onmessage = (event) => {
+                    try {
+                        const data = JSON.parse(event.data);
+                        console.log('📩 Received:', data.type);
+
+                        if (data.type === 'OPEN_CAMERA') {
+                            const { sessionId, lectureId, doctorName, doctorId, token } = data.payload;
+                            
+                            // فتح الكاميرا
+                            const cameraUrl = `camera.html?sessionId=${sessionId}&lectureId=${lectureId}&doctorId=${doctorId}&doctorName=${encodeURIComponent(doctorName)}&token=${token}`;
+                            openCameraWindow(cameraUrl);
+                        }
+                    } catch (error) {
+                        console.error('Error processing message:', error);
+                    }
+                };
+
+                ws.onclose = () => {
+                    console.log('🔌 WebSocket disconnected');
+                    updateConnectionStatus(false, 'Disconnected - reconnecting...');
+                    
+                    // محاولة إعادة الاتصال
+                    if (reconnectAttempts < maxReconnectAttempts) {
+                        reconnectAttempts++;
+                        reconnectTimer = setTimeout(connectWebSocket, 3000);
+                    } else {
+                        updateConnectionStatus(false, 'Connection failed - refresh page');
+                    }
+                };
+
+                ws.onerror = (error) => {
+                    console.error('WebSocket error:', error);
+                    updateConnectionStatus(false, 'Connection error');
+                };
+
+            } catch (error) {
+                console.error('Error creating WebSocket:', error);
+                updateConnectionStatus(false, 'Failed to connect');
+            }
+        }
+
+        // ============================================
+        // فحص صحة السيرفر (بدون تغيير في الصفحة)
+        // ============================================
+        function checkServerHealth() {
+            fetch('/api/health')
+                .then(response => {
+                    if (response.ok) {
+                        console.log('✅ Server health check passed');
+                    }
+                })
+                .catch(error => {
+                    console.warn('Server health check failed - server might be down');
+                });
+        }
+
+        // ============================================
+        // بدء التشغيل
+        // ============================================
+        function initialize() {
+            console.log('🚀 Starting Host Listener (Stable Mode)');
+            console.log(`🔐 Protocol: ${window.location.protocol}, WebSocket URL: ${wsUrl}`);
+            
+            // الاتصال بـ WebSocket
+            connectWebSocket();
+            
+            // فحص صحة السيرفر كل 30 ثانية (بدون تأثير على الصفحة)
+            healthCheckTimer = setInterval(checkServerHealth, 30000);
+            
+            // فحص أولي
+            checkServerHealth();
+        }
+
+        // بدء التشغيل
+        initialize();
+
+        // ============================================
+        // تنظيف عند الإغلاق
+        // ============================================
+        window.addEventListener('beforeunload', () => {
+            if (ws) {
+                ws.close();
+            }
+            if (healthCheckTimer) {
+                clearInterval(healthCheckTimer);
+            }
+            if (reconnectTimer) {
+                clearTimeout(reconnectTimer);
+            }
+        });
+
+        // منع أي Refresh تلقائي
+        window.addEventListener('visibilitychange', () => {
+            if (document.visibilityState === 'visible') {
+                console.log('Page is visible - checking connection');
+                if (!ws || ws.readyState > 1) {
+                    connectWebSocket();
+                }
+            }
+        });
+
+        // منع إعادة التحميل عند فقدان التركيز
+        window.addEventListener('blur', (e) => {
+            // لا تفعل شيئاً
+        });
+
+        window.addEventListener('focus', (e) => {
+            // فقط تحقق من الاتصال دون Refresh
+            if (!ws || ws.readyState > 1) {
+                connectWebSocket();
+            }
+        });
+
+    </script>
+</body>
+</html>

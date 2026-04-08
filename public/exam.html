@@ -1,0 +1,702 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl" class="bg-gradient-to-br from-gray-950 via-indigo-950 to-gray-900 text-white">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>نظام المراقبة الذكي للامتحانات - Youssef</title>
+
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script src="https://cdn.jsdelivr.net/npm/@tensorflow/tfjs@latest/dist/tf.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/@tensorflow-models/coco-ssd@latest"></script>
+  <script src="https://cdn.jsdelivr.net/npm/@vladmandic/face-api/dist/face-api.js"></script>
+
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css"/>
+
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+
+  <style>
+    .detection-box {
+      position: absolute;
+      border: 3px solid #ef4444;
+      border-radius: 10px;
+      background: rgba(239, 68, 68, 0.12);
+      pointer-events: none;
+      box-shadow: 0 0 12px rgba(239,68,68,0.6);
+      transition: all 0.2s;
+    }
+    .detection-label {
+      position: absolute;
+      top: -32px;
+      left: 0;
+      background: #ef4444;
+      color: white;
+      padding: 4px 12px;
+      border-radius: 6px;
+      font-size: 13px;
+      font-weight: 600;
+      white-space: nowrap;
+      box-shadow: 0 3px 8px rgba(0,0,0,0.6);
+    }
+  </style>
+</head>
+<body class="min-h-screen font-sans antialiased">
+
+  <!-- شاشة التحميل -->
+  <div id="loading" class="fixed inset-0 bg-black/95 flex items-center justify-center z-50">
+    <div class="text-center space-y-5">
+      <div class="w-20 h-20 border-4 border-indigo-500 border-t-transparent rounded-full animate-spin mx-auto"></div>
+      <h2 class="text-3xl font-bold text-indigo-400">جاري تحميل النماذج الذكية...</h2>
+      <p class="text-gray-400 text-lg" id="loadStatus">التحميل جارٍ...</p>
+    </div>
+  </div>
+
+  <div class="flex h-screen overflow-hidden" id="app" hidden>
+
+    <!-- الشريط الجانبي -->
+    <aside class="w-80 bg-gray-900/85 backdrop-blur-lg border-l border-gray-800 flex-shrink-0 overflow-y-auto transition-all duration-300" id="sidebar">
+      <div class="p-6 space-y-6">
+        <div class="flex items-center justify-between">
+          <div class="flex items-center gap-3">
+            <div class="w-12 h-12 bg-gradient-to-br from-indigo-600 to-purple-700 rounded-2xl flex items-center justify-center shadow-xl">
+              <i class="fas fa-shield-halved text-white text-2xl"></i>
+            </div>
+            <h1 class="text-2xl font-bold tracking-tight">مراقبة الامتحان</h1>
+          </div>
+        </div>
+
+        <div class="space-y-5">
+          <div>
+            <label class="block text-sm text-gray-400 mb-1.5 font-medium">المادة</label>
+            <select id="subject" class="w-full bg-gray-800 border border-gray-700 rounded-lg px-4 py-2.5 text-base focus:outline-none focus:ring-2 focus:ring-indigo-500/50 transition">
+              <option value="">اختر المادة</option>
+            </select>
+          </div>
+
+          <div>
+            <label class="block text-sm text-gray-400 mb-1.5 font-medium">مدة الامتحان (دقيقة)</label>
+            <input type="range" id="duration" min="5" max="180" value="60" class="w-full accent-indigo-600">
+            <div class="text-center text-indigo-400 font-semibold mt-2 text-lg" id="durationVal">60 دقيقة</div>
+          </div>
+
+          <div class="flex gap-4">
+            <button id="startBtn" onclick="startExam()" class="flex-1 bg-indigo-600 hover:bg-indigo-700 active:bg-indigo-800 text-white font-semibold py-3 px-6 rounded-xl transition shadow-lg flex items-center justify-center gap-2 text-base">
+              <i class="fas fa-play"></i> بدء الامتحان
+            </button>
+            <button id="endBtn" onclick="endExam()" class="flex-1 bg-red-600 hover:bg-red-700 active:bg-red-800 text-white font-semibold py-3 px-6 rounded-xl transition shadow-lg hidden flex items-center justify-center gap-2 text-base">
+              <i class="fas fa-stop"></i> إنهاء الامتحان
+            </button>
+          </div>
+
+          <div class="grid grid-cols-2 gap-4">
+            <div class="bg-gray-800/60 rounded-xl p-4 border border-gray-700 text-center">
+              <div class="text-sm text-gray-400">الوقت المتبقي</div>
+              <div class="text-3xl font-bold text-indigo-300 mt-1 font-mono" id="timer">00:00</div>
+            </div>
+            <div class="bg-gray-800/60 rounded-xl p-4 border border-gray-700 text-center">
+              <div class="text-sm text-gray-400">درجة النزاهة</div>
+              <div class="text-3xl font-bold mt-1" id="integrity">100%</div>
+            </div>
+          </div>
+
+          <div class="bg-indigo-950/40 rounded-xl p-5 border border-indigo-900/60">
+            <div class="flex justify-between text-sm mb-3">
+              <span class="text-gray-300 font-medium">الكشوفات</span>
+              <span class="bg-indigo-700/60 px-3 py-1 rounded-full text-xs" id="totalVios">0</span>
+            </div>
+            <div class="grid grid-cols-4 gap-3 text-center">
+              <div>
+                <i class="fas fa-mobile-screen text-orange-400 text-2xl"></i>
+                <div class="font-bold text-lg mt-1" id="phoneCnt">0</div>
+              </div>
+              <div>
+                <i class="fas fa-book-open text-yellow-400 text-2xl"></i>
+                <div class="font-bold text-lg mt-1" id="bookCnt">0</div>
+              </div>
+              <div>
+                <i class="fas fa-user-friends text-red-400 text-2xl"></i>
+                <div class="font-bold text-lg mt-1" id="personCnt">0</div>
+              </div>
+              <div>
+                <i class="fas fa-eye-slash text-purple-400 text-2xl"></i>
+                <div class="font-bold text-lg mt-1" id="gazeCnt">0</div>
+              </div>
+            </div>
+          </div>
+
+          <div>
+            <div class="text-sm text-gray-400 mb-2 font-medium">سجل الأحداث المباشر</div>
+            <div id="timeline" class="max-h-48 overflow-y-auto text-sm space-y-2 bg-gray-950/40 p-3 rounded-lg border border-gray-800"></div>
+          </div>
+        </div>
+      </div>
+    </aside>
+
+    <!-- المحتوى الرئيسي -->
+    <main class="flex-1 flex flex-col p-6 gap-6">
+
+      <!-- منطقة الكاميرا -->
+      <div class="relative rounded-3xl overflow-hidden border-4 border-indigo-700/40 bg-black shadow-2xl flex-1 min-h-[60vh]">
+        <div class="absolute top-5 left-5 right-5 z-30 flex justify-between pointer-events-none">
+          <span class="bg-black/70 backdrop-blur-md px-5 py-2 rounded-full text-base font-medium flex items-center gap-2 shadow-lg">
+            <i class="fas fa-circle text-green-500 animate-pulse"></i> النظام نشط
+          </span>
+          <span class="bg-black/70 backdrop-blur-md px-5 py-2 rounded-full text-base font-medium flex items-center gap-2 shadow-lg">
+            <i class="fas fa-bell text-yellow-400"></i> التنبيهات: <span id="alertCnt">0</span>
+          </span>
+        </div>
+
+        <video id="video" autoplay playsinline muted class="absolute inset-0 w-full h-full object-cover"></video>
+        <canvas id="overlay" class="absolute inset-0 pointer-events-none"></canvas>
+        <div id="boxes" class="absolute inset-0 pointer-events-none"></div>
+      </div>
+
+      <!-- أزرار التحكم -->
+      <div class="flex flex-wrap gap-4 justify-center md:justify-start">
+        <button onclick="capture()" class="bg-gray-800 hover:bg-gray-700 px-6 py-3 rounded-2xl flex items-center gap-3 transition shadow-md text-base font-medium">
+          <i class="fas fa-camera text-lg"></i> التقاط صورة
+        </button>
+        <button onclick="downloadAllShots()" class="bg-gray-800 hover:bg-gray-700 px-6 py-3 rounded-2xl flex items-center gap-3 transition shadow-md text-base font-medium">
+          <i class="fas fa-file-zipper text-lg"></i> تحميل كل الصور (ZIP)
+        </button>
+        <button onclick="downloadLog()" class="bg-gray-800 hover:bg-gray-700 px-6 py-3 rounded-2xl flex items-center gap-3 transition shadow-md text-base font-medium">
+          <i class="fas fa-file-lines text-lg"></i> تصدير السجل (JSON)
+        </button>
+        <button onclick="exportPDF()" class="bg-gradient-to-r from-indigo-600 to-purple-600 hover:from-indigo-700 hover:to-purple-700 px-6 py-3 rounded-2xl flex items-center gap-3 transition shadow-lg text-base font-medium">
+          <i class="fas fa-file-pdf text-lg"></i> إنشاء تقرير PDF
+        </button>
+      </div>
+
+      <!-- Tabs -->
+      <div class="flex border-b border-gray-800">
+        <button onclick="switchTab('vios')" class="tab-btn px-8 py-4 font-semibold text-lg border-b-4 border-transparent hover:text-indigo-400 transition" id="tabVios">المخالفات</button>
+        <button onclick="switchTab('shots')" class="tab-btn px-8 py-4 font-semibold text-lg border-b-4 border-transparent hover:text-indigo-400 transition" id="tabShots">لقطات الشاشة</button>
+      </div>
+
+      <div id="viosTab" class="flex-1 overflow-y-auto pr-2">
+        <div id="viosList" class="space-y-3"></div>
+      </div>
+
+      <div id="shotsTab" class="flex-1 overflow-y-auto hidden pr-2">
+        <div class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-4" id="shotsGrid"></div>
+      </div>
+
+    </main>
+  </div>
+
+  <!-- Modal لعرض الصورة -->
+  <div id="modal" class="fixed inset-0 bg-black/95 hidden flex items-center justify-center z-50 p-4">
+    <div class="bg-gray-900 rounded-3xl p-6 max-w-5xl w-full max-h-[92vh] overflow-auto border border-gray-800 shadow-2xl">
+      <img id="modalImg" class="max-w-full rounded-2xl mx-auto" alt="لقطة مخالفة">
+      <div class="flex justify-end gap-4 mt-6">
+        <button onclick="downloadShot()" class="bg-indigo-600 hover:bg-indigo-700 px-8 py-3 rounded-2xl font-medium">تحميل الصورة</button>
+        <button onclick="closeModal()" class="bg-gray-700 hover:bg-gray-600 px-8 py-3 rounded-2xl font-medium">إغلاق</button>
+      </div>
+    </div>
+  </div>
+
+<script>
+    // ──────────────────────────────────────────────
+    //               المتغيرات العامة
+    // ──────────────────────────────────────────────
+
+    let coco = null;
+    let videoStream = null;
+    let examActive = false;
+    let examStart = null;
+    let examTimer = null;
+    let detectInterval = null;
+
+    let subjects = [];
+    let currentSubject = null;
+    let violations = [];
+    let shots = [];
+
+    let phoneCount = 0;
+    let bookCount = 0;
+    let personCount = 0;
+    let gazeCount = 0;
+    let shotCount = 0;
+    let integrity = 100;
+
+    let gazeDirection = 'center';
+    let gazeStartTime = 0;
+    const GAZE_THRESHOLD = 5; // بالثواني
+
+    // ──────────────────────────────────────────────
+    //               التهيئة عند تحميل الصفحة
+    // ──────────────────────────────────────────────
+
+    document.addEventListener('DOMContentLoaded', async () => {
+        await loadSubjects();
+        await loadModels();
+        await startCamera();
+
+        document.getElementById('loading').classList.add('hidden');
+        document.getElementById('app').removeAttribute('hidden');
+
+        document.getElementById('duration').addEventListener('input', (e) => {
+            document.getElementById('durationVal').textContent = e.target.value + ' دقيقة';
+        });
+    });
+
+    // ──────────────────────────────────────────────
+    //               تحميل المواد الدراسية
+    // ──────────────────────────────────────────────
+
+    async function loadSubjects() {
+        // يمكن استبدالها بـ fetch من سيرفر لاحقاً
+        subjects = [
+            { id: 'math',     name: 'الرياضيات' },
+            { id: 'physics',  name: 'الفيزياء' },
+            { id: 'chemistry',name: 'الكيمياء' },
+            { id: 'arabic',   name: 'اللغة العربية' },
+            { id: 'english',  name: 'اللغة الإنجليزية' }
+        ];
+
+        const select = document.getElementById('subject');
+        select.innerHTML = '<option value="">اختر المادة</option>' +
+            subjects.map(s => `<option value="${s.id}">${s.name}</option>`).join('');
+    }
+
+    // ──────────────────────────────────────────────
+    //               تحميل نماذج الذكاء الاصطناعي
+    // ──────────────────────────────────────────────
+
+    async function loadModels() {
+        try {
+            document.getElementById('loadStatus').textContent = 'جاري تحميل COCO-SSD...';
+            coco = await cocoSsd.load({ base: 'mobilenet_v2' });
+
+            document.getElementById('loadStatus').textContent = 'جاري تحميل نماذج الوجه...';
+            const MODEL_URL = 'https://cdn.jsdelivr.net/npm/@vladmandic/face-api/model/';
+
+            await faceapi.nets.tinyFaceDetector.loadFromUri(MODEL_URL);
+            await faceapi.nets.faceLandmark68Net.loadFromUri(MODEL_URL);
+            await faceapi.nets.faceRecognitionNet.loadFromUri(MODEL_URL);
+            await faceapi.nets.faceExpressionNet.loadFromUri(MODEL_URL);
+
+            document.getElementById('loadStatus').textContent = 'تم التحميل بنجاح!';
+        } catch (err) {
+            console.error('خطأ في تحميل النماذج:', err);
+            document.getElementById('loadStatus').textContent = 'فشل تحميل النماذج - تحقق من الإنترنت';
+        }
+    }
+
+    // ──────────────────────────────────────────────
+    //               تشغيل الكاميرا
+    // ──────────────────────────────────────────────
+
+    async function startCamera() {
+        try {
+            videoStream = await navigator.mediaDevices.getUserMedia({
+                video: {
+                    width: { ideal: 1280 },
+                    height: { ideal: 720 },
+                    facingMode: 'user'
+                }
+            });
+            document.getElementById('video').srcObject = videoStream;
+        } catch (err) {
+            console.error('خطأ في الوصول للكاميرا:', err);
+            alert('لا يمكن الوصول إلى الكاميرا. يرجى السماح بالوصول.');
+        }
+    }
+
+    // ──────────────────────────────────────────────
+    //               بدء عملية الكشف الدوري
+    // ──────────────────────────────────────────────
+
+    function startDetection() {
+        const video = document.getElementById('video');
+        const canvas = document.getElementById('overlay');
+        const ctx = canvas.getContext('2d');
+
+        detectInterval = setInterval(async () => {
+            if (!examActive || video.readyState !== video.HAVE_ENOUGH_DATA) return;
+
+            canvas.width = video.videoWidth;
+            canvas.height = video.videoHeight;
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+            document.getElementById('boxes').innerHTML = '';
+
+            // كشف الأشياء بـ COCO-SSD
+            try {
+                const predictions = await coco.detect(video);
+                let persons = 0;
+
+                predictions.forEach(p => {
+                    if (p.score > 0.65) {
+                        const [x, y, w, h] = p.bbox;
+
+                        if (p.class === 'cell phone') {
+                            phoneCount++;
+                            addViolation('phone', 'تم الكشف عن هاتف محمول');
+                            drawBox(x, y, w, h, '#ef4444', 'هاتف');
+                        }
+                        if (p.class === 'book') {
+                            bookCount++;
+                            addViolation('book', 'تم الكشف عن كتاب');
+                            drawBox(x, y, w, h, '#f59e0b', 'كتاب');
+                        }
+                        if (p.class === 'person') {
+                            persons++;
+                            drawBox(x, y, w, h, '#10b981', 'شخص');
+                        }
+                    }
+                });
+
+                if (persons > 1) {
+                    personCount++;
+                    addViolation('multiple', `تم الكشف عن ${persons} أشخاص`);
+                }
+            } catch (e) {
+                console.warn('خطأ في كشف COCO-SSD:', e);
+            }
+
+            // كشف الوجه + النظر + التعبيرات
+            try {
+                const detections = await faceapi.detectAllFaces(video, new faceapi.TinyFaceDetectorOptions())
+                    .withFaceLandmarks()
+                    .withFaceExpressions();
+
+                if (detections.length === 0) {
+                    addViolation('no_face', 'لا يوجد وجه - احتمال تغطية الكاميرا');
+                }
+
+                detections.forEach(d => {
+                    const landmarks = d.landmarks.positions;
+                    const nose = landmarks[30];
+                    const leftEye = landmarks[36];
+                    const rightEye = landmarks[45];
+
+                    const eyeMidX = (leftEye.x + rightEye.x) / 2;
+                    const noseX = nose.x;
+                    const faceWidth = d.detection.box.width;
+
+                    let newDirection = 'center';
+                    if (noseX - eyeMidX > faceWidth * 0.06) newDirection = 'يسار';
+                    else if (eyeMidX - noseX > faceWidth * 0.06) newDirection = 'يمين';
+
+                    if (newDirection !== 'center') {
+                        if (gazeDirection === newDirection) {
+                            const duration = (Date.now() - gazeStartTime) / 1000;
+                            if (duration > GAZE_THRESHOLD) {
+                                gazeCount++;
+                                addViolation('gaze', `النظر ${newDirection} لأكثر من ${GAZE_THRESHOLD} ثوانٍ`);
+                                gazeStartTime = Date.now();
+                            }
+                        } else {
+                            gazeDirection = newDirection;
+                            gazeStartTime = Date.now();
+                        }
+                    } else {
+                        gazeDirection = 'center';
+                    }
+
+                    const { x, y, width, height } = d.detection.box;
+                    drawBox(x, y, width, height, '#6366f1', `وجه (${newDirection})`);
+                });
+            } catch (e) {
+                console.warn('خطأ في كشف الوجه:', e);
+            }
+
+            // تحديث العدادات والنزاهة
+            document.getElementById('phoneCnt').textContent = phoneCount;
+            document.getElementById('bookCnt').textContent = bookCount;
+            document.getElementById('personCnt').textContent = personCount;
+            document.getElementById('gazeCnt').textContent = gazeCount;
+            document.getElementById('totalVios').textContent = violations.length;
+            document.getElementById('alertCnt').textContent = violations.length;
+
+            integrity = Math.max(0, 100 - (phoneCount*15) - (bookCount*10) - (personCount*20) - (gazeCount*12));
+            document.getElementById('integrity').textContent = integrity + '%';
+            document.getElementById('integrity').style.color = integrity > 70 ? '#10b981' : integrity > 40 ? '#f59e0b' : '#ef4444';
+
+        }, 700); // تردد معقول للأداء والدقة
+    }
+
+    // ──────────────────────────────────────────────
+    //               رسم المربعات حول الكائنات
+    // ──────────────────────────────────────────────
+
+    function drawBox(x, y, w, h, color, label) {
+        const box = document.createElement('div');
+        box.className = 'detection-box';
+        box.style.left   = x + 'px';
+        box.style.top    = y + 'px';
+        box.style.width  = w + 'px';
+        box.style.height = h + 'px';
+        box.style.borderColor = color;
+
+        box.innerHTML = `<span class="detection-label" style="background:${color}">${label}</span>`;
+        document.getElementById('boxes').appendChild(box);
+    }
+
+    // ──────────────────────────────────────────────
+    //               إضافة مخالفة + تسجيل + صورة تلقائية
+    // ──────────────────────────────────────────────
+
+    function addViolation(type, msg) {
+        const v = {
+            id: Date.now(),
+            type,
+            msg,
+            time: new Date().toLocaleTimeString('ar-EG')
+        };
+        violations.push(v);
+
+        // إضافة للسجل المباشر
+        const timeline = document.getElementById('timeline');
+        const event = document.createElement('div');
+        event.className = 'p-2 bg-red-950/40 rounded-lg border border-red-900/50 text-sm';
+        event.innerHTML = `<span class="text-gray-400">${v.time}</span> ${msg}`;
+        timeline.prepend(event);
+
+        // إضافة لقائمة المخالفات
+        const list = document.getElementById('viosList');
+        const item = document.createElement('div');
+        item.className = 'p-3 bg-red-950/30 rounded-xl border border-red-900/40 flex justify-between items-center';
+        item.innerHTML = `
+            <span>${msg}</span>
+            <span class="text-gray-400 text-sm">${v.time}</span>
+        `;
+        list.prepend(item);
+
+        capture(); // صورة تلقائية عند كل مخالفة
+    }
+
+    // ──────────────────────────────────────────────
+    //               التقاط صورة من الفيديو
+    // ──────────────────────────────────────────────
+
+    function capture() {
+        const video = document.getElementById('video');
+        if (video.videoWidth === 0) return;
+
+        const canvas = document.createElement('canvas');
+        canvas.width = video.videoWidth;
+        canvas.height = video.videoHeight;
+        const ctx = canvas.getContext('2d');
+        ctx.drawImage(video, 0, 0);
+
+        // إضافة نص تحذير على الصورة
+        ctx.font = 'bold 32px Tajawal, sans-serif';
+        ctx.fillStyle = '#ef4444';
+        ctx.fillText('⚠️ مخالفة', 30, 60);
+        ctx.fillStyle = 'white';
+        ctx.font = '20px Tajawal, sans-serif';
+        ctx.fillText(new Date().toLocaleString('ar-EG'), 30, 100);
+
+        const dataUrl = canvas.toDataURL('image/jpeg', 0.92);
+        const shot = { id: Date.now(), data: dataUrl, time: new Date().toLocaleString('ar-EG') };
+        shots.push(shot);
+        shotCount++;
+
+        const grid = document.getElementById('shotsGrid');
+        const div = document.createElement('div');
+        div.className = 'aspect-square rounded-xl overflow-hidden border-2 border-gray-700 hover:border-indigo-500 transition cursor-pointer';
+        div.innerHTML = `<img src="${dataUrl}" class="w-full h-full object-cover" onclick="viewShot('${dataUrl}')">`;
+        grid.prepend(div);
+    }
+
+    // ──────────────────────────────────────────────
+    //               بدء الامتحان
+    // ──────────────────────────────────────────────
+
+    function startExam() {
+        const subjId = document.getElementById('subject').value;
+        if (!subjId) return alert('يرجى اختيار المادة أولاً');
+
+        currentSubject = subjects.find(s => s.id === subjId);
+        examActive = true;
+        examStart = Date.now();
+
+        violations = [];
+        shots = [];
+        phoneCount = bookCount = personCount = gazeCount = shotCount = 0;
+        integrity = 100;
+        gazeDirection = 'center';
+        gazeStartTime = 0;
+
+        // تصفير العدادات والسجلات
+        document.querySelectorAll('#phoneCnt, #bookCnt, #personCnt, #gazeCnt, #totalVios, #alertCnt').forEach(el => el.textContent = '0');
+        document.getElementById('integrity').textContent = '100%';
+        document.getElementById('integrity').style.color = '#10b981';
+        document.getElementById('timeline').innerHTML = '';
+        document.getElementById('viosList').innerHTML = '';
+        document.getElementById('shotsGrid').innerHTML = '';
+
+        document.getElementById('startBtn').classList.add('hidden');
+        document.getElementById('endBtn').classList.remove('hidden');
+
+        const durationMin = parseInt(document.getElementById('duration').value);
+        startTimer(durationMin * 60);
+        startDetection();
+    }
+
+    // ──────────────────────────────────────────────
+    //               إنهاء الامتحان
+    // ──────────────────────────────────────────────
+
+    function endExam() {
+        examActive = false;
+        clearInterval(examTimer);
+        clearInterval(detectInterval);
+
+        document.getElementById('startBtn').classList.remove('hidden');
+        document.getElementById('endBtn').classList.add('hidden');
+
+        alert('تم إنهاء الامتحان بنجاح');
+    }
+
+    // ──────────────────────────────────────────────
+    //               المؤقت (Countdown)
+    // ──────────────────────────────────────────────
+
+    function startTimer(seconds) {
+        const timerEl = document.getElementById('timer');
+        examTimer = setInterval(() => {
+            if (!examActive) return;
+
+            const elapsed = Math.floor((Date.now() - examStart) / 1000);
+            const remaining = Math.max(0, seconds - elapsed);
+
+            const m = Math.floor(remaining / 60).toString().padStart(2, '0');
+            const s = (remaining % 60).toString().padStart(2, '0');
+            timerEl.textContent = `${m}:${s}`;
+
+            if (remaining <= 0) {
+                endExam();
+            }
+        }, 1000);
+    }
+
+    // ──────────────────────────────────────────────
+    //               تصدير تقرير PDF
+    // ──────────────────────────────────────────────
+
+    function exportPDF() {
+        const { jsPDF } = window.jspdf;
+        if (!jsPDF) return alert('مكتبة jsPDF غير محملة');
+
+        const doc = new jsPDF();
+        doc.setFont("Amiri-Regular", "normal"); // إذا كنت تستخدم خط عربي
+
+        doc.setFillColor(79, 70, 229);
+        doc.rect(0, 0, doc.internal.pageSize.width, 30, 'F');
+        doc.setTextColor(255, 255, 255);
+        doc.setFontSize(20);
+        doc.text('تقرير مراقبة الامتحان', 105, 20, { align: 'center' });
+
+        doc.setTextColor(0);
+        doc.setFontSize(12);
+        let y = 45;
+        doc.text(`المادة: ${currentSubject?.name || 'غير محدد'}`, 20, y); y += 10;
+        doc.text(`التاريخ: ${new Date().toLocaleString('ar-EG')}`, 20, y); y += 10;
+        doc.text(`درجة النزاهة النهائية: ${integrity}%`, 20, y); y += 15;
+
+        doc.text('المخالفات المسجلة:', 20, y); y += 10;
+        violations.forEach((v, i) => {
+            if (y > 270) { doc.addPage(); y = 20; }
+            doc.text(`${i+1}. ${v.time} - ${v.msg}`, 25, y);
+            y += 8;
+        });
+
+        doc.save(`تقرير_امتحان_${Date.now()}.pdf`);
+    }
+
+    // ──────────────────────────────────────────────
+    //               تحميل كل اللقطات كملف ZIP
+    // ──────────────────────────────────────────────
+
+    async function downloadAllShots() {
+        if (shots.length === 0) return alert('لا توجد لقطات للتحميل');
+
+        const zip = new JSZip();
+        shots.forEach((shot, index) => {
+            const base64 = shot.data.split(',')[1];
+            const filename = `لقطة_${index+1}_${shot.time.replace(/[:/]/g, '-')}.jpg`;
+            zip.file(filename, base64, { base64: true });
+        });
+
+        const content = await zip.generateAsync({ type: 'blob' });
+        const link = document.createElement('a');
+        link.href = URL.createObjectURL(content);
+        link.download = `لقطات_الامتحان_${Date.now()}.zip`;
+        link.click();
+    }
+
+    // ──────────────────────────────────────────────
+    //               تحميل السجل كـ JSON
+    // ──────────────────────────────────────────────
+
+    function downloadLog() {
+        if (violations.length === 0) return alert('لا توجد مخالفات مسجلة');
+
+        const logData = {
+            subject: currentSubject?.name || 'غير محدد',
+            startTime: examStart ? new Date(examStart).toLocaleString('ar-EG') : '',
+            endTime: new Date().toLocaleString('ar-EG'),
+            finalIntegrity: integrity,
+            violationCount: violations.length,
+            violations: violations.map(v => ({
+                time: v.time,
+                type: v.type,
+                message: v.msg
+            }))
+        };
+
+        const blob = new Blob([JSON.stringify(logData, null, 2)], { type: 'application/json' });
+        const link = document.createElement('a');
+        link.href = URL.createObjectURL(blob);
+        link.download = `سجل_الامتحان_${Date.now()}.json`;
+        link.click();
+    }
+
+    // ──────────────────────────────────────────────
+    //               تبديل علامات التبويب
+    // ──────────────────────────────────────────────
+
+    function switchTab(tab) {
+        document.getElementById('viosTab').classList.toggle('hidden', tab !== 'vios');
+        document.getElementById('shotsTab').classList.toggle('hidden', tab !== 'shots');
+
+        document.getElementById('tabVios').classList.toggle('border-indigo-500', tab === 'vios');
+        document.getElementById('tabVios').classList.toggle('text-indigo-400', tab === 'vios');
+        document.getElementById('tabShots').classList.toggle('border-indigo-500', tab === 'shots');
+        document.getElementById('tabShots').classList.toggle('text-indigo-400', tab === 'shots');
+    }
+
+    // ──────────────────────────────────────────────
+    //               عرض صورة في Modal
+    // ──────────────────────────────────────────────
+
+    function viewShot(dataUrl) {
+        document.getElementById('modalImg').src = dataUrl;
+        document.getElementById('modal').classList.remove('hidden');
+    }
+
+    function closeModal() {
+        document.getElementById('modal').classList.add('hidden');
+    }
+
+    function downloadShot() {
+        const link = document.createElement('a');
+        link.href = document.getElementById('modalImg').src;
+        link.download = `لقطة_مخالفة_${Date.now()}.jpg`;
+        link.click();
+    }
+
+    // ──────────────────────────────────────────────
+    //               تنظيف عند إغلاق الصفحة
+    // ──────────────────────────────────────────────
+
+    window.addEventListener('beforeunload', () => {
+        if (videoStream) {
+            videoStream.getTracks().forEach(track => track.stop());
+        }
+    });
+</script>
+</body>
+</html>

@@ -1,0 +1,1706 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+    <title>System Dashboard - Site Management</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css"/>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap');
+        
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: 'Inter', sans-serif;
+            transition: background-color 0.3s ease, color 0.3s ease;
+            min-height: 100vh;
+        }
+        
+        /* ============================================
+           LIGHT MODE (Default)
+           ============================================ */
+        body.light-mode {
+            --bg-primary: #f8fafc;
+            --bg-secondary: #ffffff;
+            --bg-card: #ffffff;
+            --bg-sidebar: #f1f5f9;
+            --text-primary: #0f172a;
+            --text-secondary: #475569;
+            --text-muted: #64748b;
+            --border-color: #e2e8f0;
+            --sidebar-border: #e2e8f0;
+            --card-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05), 0 2px 4px -1px rgba(0, 0, 0, 0.03);
+            --hover-bg: #f1f5f9;
+            --table-row-bg: #ffffff;
+            --table-row-hover: #f8fafc;
+            --input-bg: #ffffff;
+            --input-border: #e2e8f0;
+            --input-focus: #10b981;
+            background: linear-gradient(135deg, #f8fafc 0%, #e2e8f0 100%);
+            color: #0f172a;
+        }
+        
+        /* ============================================
+           DARK MODE
+           ============================================ */
+        body.dark-mode {
+            --bg-primary: #0a0c15;
+            --bg-secondary: #111827;
+            --bg-card: #1e293b;
+            --bg-sidebar: #0f172a;
+            --text-primary: #f1f5f9;
+            --text-secondary: #cbd5e1;
+            --text-muted: #94a3b8;
+            --border-color: #334155;
+            --sidebar-border: #1e293b;
+            --card-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.3);
+            --hover-bg: #334155;
+            --table-row-bg: #1e293b;
+            --table-row-hover: #334155;
+            --input-bg: #1e293b;
+            --input-border: #475569;
+            --input-focus: #34d399;
+            background: linear-gradient(135deg, #0a0c15 0%, #111827 100%);
+            color: #f1f5f9;
+        }
+        
+        /* Apply CSS Variables */
+        body {
+            background: var(--bg-primary);
+            color: var(--text-primary);
+        }
+        
+        /* Login Container */
+        .login-container {
+            background: var(--bg-card);
+            backdrop-filter: blur(16px);
+            border: 1px solid var(--border-color);
+            border-radius: 2rem;
+            box-shadow: var(--card-shadow);
+        }
+        
+        /* Cards */
+        .card {
+            transition: all 0.3s ease;
+            backdrop-filter: blur(12px);
+            background: var(--bg-card);
+            border: 1px solid var(--border-color);
+            border-radius: 1.5rem;
+            padding: 1.5rem;
+        }
+        
+        .card:hover {
+            transform: translateY(-4px);
+            box-shadow: var(--card-shadow);
+            border-color: rgba(16, 185, 129, 0.4);
+        }
+        
+        /* Stat Cards */
+        .stat-card {
+            background: linear-gradient(135deg, #10b981, #059669);
+            border-radius: 1.5rem;
+            padding: 1.5rem;
+            transition: all 0.3s ease;
+            cursor: pointer;
+            position: relative;
+            overflow: hidden;
+            color: white;
+        }
+        
+        .stat-card::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: -100%;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(90deg, transparent, rgba(255,255,255,0.1), transparent);
+            transition: left 0.5s ease;
+        }
+        
+        .stat-card:hover::before {
+            left: 100%;
+        }
+        
+        .stat-card:hover {
+            transform: translateY(-6px);
+            box-shadow: 0 25px 40px -12px rgba(16, 185, 129, 0.5);
+        }
+        
+        .stat-card.warning { background: linear-gradient(135deg, #f59e0b, #d97706); }
+        .stat-card.danger { background: linear-gradient(135deg, #ef4444, #dc2626); }
+        .stat-card.info { background: linear-gradient(135deg, #3b82f6, #2563eb); }
+        .stat-card.purple { background: linear-gradient(135deg, #8b5cf6, #7c3aed); }
+        .stat-card.cyan { background: linear-gradient(135deg, #06b6d4, #0891b2); }
+        
+        /* Buttons */
+        .btn-primary {
+            background: linear-gradient(90deg, #10b981, #059669);
+            transition: all 0.3s;
+            border-radius: 0.875rem;
+            color: white;
+        }
+        
+        .btn-primary:hover {
+            background: linear-gradient(90deg, #059669, #047857);
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(16, 185, 129, 0.4);
+        }
+        
+        .btn-danger {
+            background: linear-gradient(90deg, #ef4444, #dc2626);
+            color: white;
+        }
+        
+        .btn-danger:hover {
+            background: linear-gradient(90deg, #dc2626, #b91c1c);
+            transform: translateY(-2px);
+        }
+        
+        .btn-outline {
+            background: transparent;
+            border: 1px solid rgba(16, 185, 129, 0.5);
+            transition: all 0.3s;
+            color: var(--text-primary);
+        }
+        
+        .btn-outline:hover {
+            background: rgba(16, 185, 129, 0.1);
+            border-color: #10b981;
+        }
+        
+        /* Tables */
+        .table-container {
+            background: var(--bg-card);
+            backdrop-filter: blur(12px);
+            border-radius: 1.5rem;
+            padding: 1.5rem;
+            border: 1px solid var(--border-color);
+            overflow-x: auto;
+        }
+        
+        table {
+            width: 100%;
+            border-collapse: separate;
+            border-spacing: 0 8px;
+        }
+        
+        thead tr {
+            background: linear-gradient(90deg, #10b981, #059669);
+            border-radius: 1rem;
+        }
+        
+        th {
+            padding: 1rem;
+            text-align: left;
+            font-weight: 600;
+            color: white;
+            font-size: 0.8rem;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+        
+        th:first-child { border-top-left-radius: 1rem; border-bottom-left-radius: 1rem; }
+        th:last-child { border-top-right-radius: 1rem; border-bottom-right-radius: 1rem; }
+        
+        td {
+            padding: 1rem;
+            background: var(--table-row-bg);
+            border-radius: 0.75rem;
+            transition: all 0.2s ease;
+            color: var(--text-secondary);
+        }
+        
+        tr:hover td {
+            background: var(--table-row-hover);
+            transform: scale(1.01);
+        }
+        
+        /* Badges */
+        .badge {
+            padding: 0.25rem 0.75rem;
+            border-radius: 2rem;
+            font-size: 0.7rem;
+            font-weight: 600;
+        }
+        
+        .badge-online {
+            background: rgba(16, 185, 129, 0.2);
+            color: #10b981;
+            border: 1px solid rgba(16, 185, 129, 0.3);
+        }
+        
+        .badge-offline {
+            background: rgba(239, 68, 68, 0.2);
+            color: #ef4444;
+            border: 1px solid rgba(239, 68, 68, 0.3);
+        }
+        
+        .badge-warning {
+            background: rgba(245, 158, 11, 0.2);
+            color: #f59e0b;
+            border: 1px solid rgba(245, 158, 11, 0.3);
+        }
+        
+        /* Progress Bar */
+        .progress-bar {
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 1rem;
+            overflow: hidden;
+        }
+        
+        .progress-fill {
+            background: linear-gradient(90deg, #10b981, #059669);
+            height: 0.5rem;
+            border-radius: 1rem;
+            transition: width 0.5s ease;
+        }
+        
+        /* Sidebar */
+        .sidebar {
+            background: var(--bg-sidebar);
+            width: 280px;
+            box-shadow: 4px 0 20px rgba(0, 0, 0, 0.1);
+            border-right: 1px solid var(--sidebar-border);
+        }
+        
+        .nav-btn {
+            transition: all 0.3s ease;
+            border-radius: 0.875rem;
+            font-weight: 500;
+            position: relative;
+            overflow: hidden;
+            color: var(--text-secondary);
+        }
+        
+        .nav-btn::before {
+            content: '';
+            position: absolute;
+            left: 0;
+            top: 0;
+            width: 0;
+            height: 100%;
+            background: rgba(16, 185, 129, 0.1);
+            transition: width 0.3s ease;
+        }
+        
+        .nav-btn:hover::before {
+            width: 100%;
+        }
+        
+        .nav-btn:hover {
+            transform: translateX(4px);
+            background: rgba(16, 185, 129, 0.1);
+            color: var(--text-primary);
+        }
+        
+        .nav-btn.active {
+            background: linear-gradient(90deg, rgba(16, 185, 129, 0.2), rgba(5, 150, 105, 0.1));
+            border-left: 3px solid #10b981;
+            color: #10b981;
+        }
+        
+        .nav-btn i {
+            color: #10b981;
+        }
+        
+        /* Version Tag */
+        .version-tag {
+            background: rgba(16, 185, 129, 0.15);
+            border: 1px solid rgba(16, 185, 129, 0.3);
+            border-radius: 100px;
+            padding: 0.25rem 0.75rem;
+            font-size: 0.7rem;
+            font-weight: 600;
+        }
+        
+        .version-tag.outdated {
+            background: rgba(239, 68, 68, 0.15);
+            border-color: rgba(239, 68, 68, 0.3);
+            color: #f87171;
+        }
+        
+        /* Toast */
+        .toast {
+            animation: slideIn 0.3s cubic-bezier(0.68, -0.55, 0.265, 1.55) forwards;
+            border-radius: 1rem;
+        }
+        
+        @keyframes slideIn {
+            from {
+                transform: translateX(100%);
+                opacity: 0;
+            }
+            to {
+                transform: translateX(0);
+                opacity: 1;
+            }
+        }
+        
+        /* Live Indicator Pulse */
+        .live-pulse {
+            animation: pulse 1.5s infinite;
+        }
+        
+        @keyframes pulse {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.5; }
+        }
+        
+        /* Scrollbar */
+        ::-webkit-scrollbar {
+            width: 6px;
+            height: 6px;
+        }
+        
+        ::-webkit-scrollbar-track {
+            background: var(--border-color);
+            border-radius: 3px;
+        }
+        
+        ::-webkit-scrollbar-thumb {
+            background: #10b981;
+            border-radius: 3px;
+        }
+        
+        ::-webkit-scrollbar-thumb:hover {
+            background: #34d399;
+        }
+        
+        /* Responsive */
+        @media (max-width: 768px) {
+            .sidebar {
+                width: 220px;
+                position: fixed;
+                z-index: 50;
+                transform: translateX(-100%);
+                transition: transform 0.3s ease;
+            }
+            .sidebar.open {
+                transform: translateX(0);
+            }
+            .main-content {
+                margin-left: 0 !important;
+            }
+            .grid-cols-4 {
+                grid-template-columns: repeat(2, 1fr);
+            }
+            .theme-toggle-text {
+                display: none;
+            }
+            .theme-toggle-btn {
+                padding: 8px 12px;
+            }
+        }
+        
+        .hidden {
+            display: none !important;
+        }
+        
+        /* Stats Number */
+        .stat-number {
+            font-size: 2rem;
+            font-weight: 800;
+            letter-spacing: -0.02em;
+        }
+        
+        /* Table Cell Highlight */
+        .table-highlight {
+            background: rgba(16, 185, 129, 0.2);
+        }
+
+        /* Backup Manager Styles */
+        #backupSearchInput:focus {
+            border-color: #10b981;
+            outline: none;
+            box-shadow: 0 0 0 2px rgba(16, 185, 129, 0.2);
+        }
+
+        /* Switch Toggle */
+        .peer:checked ~ .peer-checked\:bg-emerald-600 {
+            background-color: #10b981;
+        }
+
+        /* Scrollbar for tables */
+        #backupsList .overflow-x-auto {
+            max-height: 400px;
+            overflow-y: auto;
+        }
+        
+        /* Security Dashboard Styles */
+        .tab-content {
+            animation: fadeIn 0.3s ease;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        /* Status Badges */
+        .status-badge-locked {
+            background: rgba(239, 68, 68, 0.2);
+            border: 1px solid rgba(239, 68, 68, 0.3);
+            color: #f87171;
+            padding: 2px 8px;
+            border-radius: 20px;
+            font-size: 11px;
+            font-weight: 500;
+        }
+
+        .status-badge-unlocked {
+            background: rgba(16, 185, 129, 0.2);
+            border: 1px solid rgba(16, 185, 129, 0.3);
+            color: #10b981;
+        }
+
+        /* Table Row Hover */
+        .security-table-row {
+            transition: all 0.2s ease;
+        }
+
+        .security-table-row:hover {
+            background: rgba(16, 185, 129, 0.1);
+            transform: scale(1.01);
+        }
+
+        /* Strength Meter */
+        .strength-meter {
+            height: 4px;
+            border-radius: 4px;
+            transition: width 0.3s ease;
+        }
+
+        .strength-weak { background: linear-gradient(90deg, #ef4444, #f97316); }
+        .strength-medium { background: linear-gradient(90deg, #f59e0b, #eab308); }
+        .strength-strong { background: linear-gradient(90deg, #10b981, #34d399); }
+
+        /* Risk Level Badges */
+        .risk-high {
+            background: rgba(239, 68, 68, 0.2);
+            color: #f87171;
+            border: 1px solid rgba(239, 68, 68, 0.3);
+        }
+
+        .risk-medium {
+            background: rgba(245, 158, 11, 0.2);
+            color: #fbbf24;
+            border: 1px solid rgba(245, 158, 11, 0.3);
+        }
+
+        .risk-low {
+            background: rgba(16, 185, 129, 0.2);
+            color: #34d399;
+            border: 1px solid rgba(16, 185, 129, 0.3);
+        }
+
+        /* Tab Content Styles */
+        .tab-content {
+            display: block;
+            animation: fadeIn 0.3s ease;
+        }
+
+        .tab-content.hidden {
+            display: none !important;
+        }
+
+        /* Active Tab Button */
+        .tab-btn-active {
+            background: linear-gradient(90deg, rgba(16, 185, 129, 0.2), rgba(5, 150, 105, 0.2));
+            color: #10b981 !important;
+            border: 1px solid rgba(16, 185, 129, 0.3);
+        }
+
+        .tab-btn-inactive {
+            color: #9ca3af !important;
+        }
+
+        .tab-btn-inactive:hover {
+            background: rgba(255, 255, 255, 0.05);
+            color: white !important;
+        }
+
+        /* Security Tabs */
+        .security-tab-content {
+            display: block;
+            animation: fadeIn 0.3s ease;
+        }
+
+        .security-tab-content.hidden {
+            display: none !important;
+        }
+
+        /* Ensure manual banned IPs list is visible */
+        #manualBannedIPsList {
+            display: block !important;
+            visibility: visible !important;
+            min-height: 100px;
+        }
+
+        #manualBannedIPsList .space-y-2 {
+            display: block;
+        }
+
+        #securityTabManualBan {
+            display: block;
+        }
+
+        #securityTabManualBan.hidden {
+            display: none !important;
+        }
+        
+        /* ============================================
+           PROFESSIONAL THEME TOGGLE BUTTON
+           ============================================ */
+        .theme-toggle-btn {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            padding: 8px 16px;
+            background: var(--bg-card);
+            border: 1px solid var(--border-color);
+            border-radius: 40px;
+            cursor: pointer;
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            box-shadow: var(--card-shadow);
+        }
+        
+        .theme-toggle-btn:hover {
+            transform: translateY(-2px);
+            border-color: #10b981;
+            box-shadow: 0 4px 12px rgba(16, 185, 129, 0.2);
+        }
+        
+        .theme-toggle-btn:active {
+            transform: scale(0.97);
+        }
+        
+        .theme-toggle-icon {
+            position: relative;
+            width: 20px;
+            height: 20px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        
+        .theme-toggle-icon i {
+            position: absolute;
+            font-size: 1rem;
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+        
+        .sun-icon {
+            color: #f59e0b;
+            opacity: 1;
+            transform: rotate(0deg) scale(1);
+        }
+        
+        .moon-icon {
+            color: #818cf8;
+            opacity: 0;
+            transform: rotate(-90deg) scale(0.5);
+        }
+        
+        .theme-toggle-text {
+            font-size: 0.8rem;
+            font-weight: 500;
+            color: var(--text-secondary);
+            transition: color 0.3s ease;
+        }
+        
+        .theme-toggle-text::before {
+            content: "Light";
+        }
+        
+        /* Dark mode active state */
+        body.dark-mode .theme-toggle-btn {
+            background: var(--bg-card);
+            border-color: var(--border-color);
+        }
+        
+        body.dark-mode .sun-icon {
+            opacity: 0;
+            transform: rotate(90deg) scale(0.5);
+        }
+        
+        body.dark-mode .moon-icon {
+            opacity: 1;
+            transform: rotate(0deg) scale(1);
+        }
+        
+        body.dark-mode .theme-toggle-text {
+            color: var(--text-primary);
+        }
+        
+        body.dark-mode .theme-toggle-text::before {
+            content: "Dark";
+        }
+        
+        /* Date badge styling */
+        .date-badge {
+            background: var(--bg-card);
+            border-color: var(--border-color);
+            color: var(--text-primary);
+        }
+        
+        /* Toast Container */
+        #toast > div {
+            background: var(--bg-card);
+            border: 1px solid var(--border-color);
+            color: var(--text-primary);
+        }
+        
+        /* Admin Info Card */
+        .bg-slate-800\/40, .bg-slate-800\/60 {
+            background: var(--bg-secondary) !important;
+        }
+        
+        /* Modal backgrounds */
+        #unlockUserModal, .fixed.inset-0.bg-black\/80 {
+            background: rgba(0, 0, 0, 0.8);
+        }
+    </style>
+</head>
+<body class="min-h-screen light-mode">
+
+    <!-- Login Screen -->
+    <div id="loginScreen" class="flex items-center justify-center min-h-screen">
+        <div class="login-container p-10 rounded-2xl w-full max-w-md text-center">
+            <div class="mb-8">
+                <div class="w-24 h-24 bg-gradient-to-br from-emerald-500 to-green-600 rounded-2xl mx-auto mb-6 flex items-center justify-center shadow-lg">
+                    <i class="fas fa-server text-4xl text-white"></i>
+                </div>
+                <h1 class="text-3xl font-bold bg-gradient-to-r from-emerald-400 to-green-300 bg-clip-text text-transparent">
+                    System Dashboard
+                </h1>
+                <p class="text-gray-400 mt-2 text-sm">Site Management Portal</p>
+            </div>
+            
+            <form id="devLoginForm" class="space-y-5">
+                <div class="relative">
+                    <i class="fas fa-user absolute left-4 top-1/2 -translate-y-1/2 text-gray-500"></i>
+                    <input type="text" id="devUsername" placeholder="Username" required 
+                           class="w-full pl-11 pr-4 py-3 bg-white/5 rounded-xl focus:ring-2 focus:ring-emerald-500 text-base border border-white/10 focus:border-emerald-500 transition"/>
+                </div>
+                <div class="relative">
+                    <i class="fas fa-lock absolute left-4 top-1/2 -translate-y-1/2 text-gray-500"></i>
+                    <input type="password" id="devPassword" placeholder="Password" required 
+                           class="w-full pl-11 pr-4 py-3 bg-white/5 rounded-xl focus:ring-2 focus:ring-emerald-500 text-base border border-white/10 focus:border-emerald-500 transition"/>
+                </div>
+                <button type="submit" class="w-full btn-primary py-3 rounded-xl font-semibold text-base shadow-lg transition-all duration-300 flex items-center justify-center gap-2">
+                    <i class="fas fa-sign-in-alt"></i>
+                    <span>Access Dashboard</span>
+                </button>
+            </form>
+            <p class="mt-6 text-xs text-gray-500">Developer Access Only</p>
+        </div>
+    </div>
+
+    <!-- Main Dashboard -->
+    <div id="dashboard" class="hidden flex min-h-screen">
+        <!-- Sidebar -->
+        <div class="sidebar p-5 flex flex-col">
+            <div class="text-center mb-6">
+                <div class="w-14 h-14 bg-gradient-to-br from-emerald-500 to-green-600 rounded-xl mx-auto mb-3 flex items-center justify-center shadow-lg">
+                    <i class="fas fa-crown text-xl text-white"></i>
+                </div>
+                <div class="p-3 rounded-xl" style="background: var(--bg-secondary);">
+                    <p class="font-bold text-emerald-400">System Admin</p>
+                    <p class="text-xs mt-1" style="color: var(--text-muted);">Developer Access</p>
+                </div>
+            </div>
+            
+            <nav class="space-y-1 flex-1">
+                <button data-section="overview" class="nav-btn w-full text-left p-3 rounded-xl flex items-center gap-3 active">
+                    <i class="fas fa-chart-line w-5"></i>
+                    <span class="text-sm font-medium">Overview</span>
+                </button>
+                <button data-section="sessions" class="nav-btn w-full text-left p-3 rounded-xl flex items-center gap-3">
+                    <i class="fas fa-users w-5"></i>
+                    <span class="text-sm font-medium">Active Sessions</span>
+                </button>
+                <button data-section="devices" class="nav-btn w-full text-left p-3 rounded-xl flex items-center gap-3">
+                    <i class="fas fa-laptop-code w-5"></i>
+                    <span class="text-sm font-medium">Connected Devices</span>
+                </button>
+                <button data-section="backups" class="nav-btn w-full text-left p-3 rounded-xl flex items-center gap-3">
+                    <i class="fas fa-database w-5"></i>
+                    <span class="text-sm font-medium">Backup Manager</span>
+                </button>
+                <button data-section="health" class="nav-btn w-full text-left p-3 rounded-xl flex items-center gap-3">
+                    <i class="fas fa-heartbeat w-5"></i>
+                    <span class="text-sm font-medium">System Health</span>
+                </button>
+                <button data-section="security" class="nav-btn w-full text-left p-3 rounded-xl flex items-center gap-3">
+                    <i class="fas fa-shield-alt w-5"></i>
+                    <span class="text-sm font-medium">Security</span>
+                </button>
+                <button data-section="rate-limit" class="nav-btn w-full text-left p-3 rounded-xl flex items-center gap-3">
+                    <i class="fas fa-tachometer-alt w-5"></i>
+                    <span class="text-sm font-medium">Rate Limits</span>
+                </button>
+            </nav>
+            
+            <button id="logout" class="w-full bg-red-600/20 hover:bg-red-600/40 text-red-400 py-3 rounded-xl font-semibold flex items-center justify-center gap-2 mt-4 border border-red-500/30 transition-all duration-200">
+                <i class="fas fa-sign-out-alt"></i>
+                <span>Logout</span>
+            </button>
+        </div>
+
+        <!-- Main Content -->
+        <div class="flex-1 p-6 overflow-y-auto ml-0 main-content">
+            <div class="flex justify-between items-center mb-6">
+                <h1 id="sectionTitle" class="text-2xl font-bold bg-gradient-to-r from-emerald-300 to-green-200 bg-clip-text text-transparent">
+                    System Overview
+                </h1>
+                <div class="flex items-center gap-3">
+                    <!-- Theme Toggle Button -->
+                    <button id="themeToggleBtn" class="theme-toggle-btn" title="Toggle Light/Dark Mode">
+                        <div class="theme-toggle-icon">
+                            <i class="fas fa-sun sun-icon"></i>
+                            <i class="fas fa-moon moon-icon"></i>
+                        </div>
+                        <span class="theme-toggle-text"></span>
+                    </button>
+                    <span class="px-4 py-2 rounded-xl text-sm border date-badge">
+                        <i class="fas fa-calendar mr-2 text-emerald-400"></i>
+                        <span id="currentDateTime" class="font-medium">--</span>
+                    </span>
+                    <button onclick="refreshAllData()" class="px-3 py-2 rounded-xl hover:bg-slate-700/60 transition border" style="background: var(--bg-secondary); border-color: var(--border-color);">
+                        <i class="fas fa-sync-alt text-emerald-400"></i>
+                    </button>
+                </div>
+            </div>
+
+            <!-- Overview Section -->
+            <div id="overviewSection">
+                <!-- Stats Cards -->
+                <div class="grid grid-cols-2 md:grid-cols-4 gap-4 mb-6">
+                    <div class="stat-card">
+                        <div class="flex items-center justify-between">
+                            <div>
+                                <p class="text-xs opacity-80">Students</p>
+                                <p id="totalStudents" class="stat-number mt-1">0</p>
+                            </div>
+                            <i class="fas fa-users text-3xl opacity-30"></i>
+                        </div>
+                    </div>
+                    <div class="stat-card warning">
+                        <div class="flex items-center justify-between">
+                            <div>
+                                <p class="text-xs opacity-80">Doctors</p>
+                                <p id="totalDoctors" class="stat-number mt-1">0</p>
+                            </div>
+                            <i class="fas fa-user-md text-3xl opacity-30"></i>
+                        </div>
+                    </div>
+                    <div class="stat-card info">
+                        <div class="flex items-center justify-between">
+                            <div>
+                                <p class="text-xs opacity-80">Subjects</p>
+                                <p id="totalSubjects" class="stat-number mt-1">0</p>
+                            </div>
+                            <i class="fas fa-book text-3xl opacity-30"></i>
+                        </div>
+                    </div>
+                    <div class="stat-card purple">
+                        <div class="flex items-center justify-between">
+                            <div>
+                                <p class="text-xs opacity-80">Lectures</p>
+                                <p id="totalLectures" class="stat-number mt-1">0</p>
+                            </div>
+                            <i class="fas fa-chalkboard-teacher text-3xl opacity-30"></i>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="grid grid-cols-2 gap-4 mb-6">
+                    <div class="stat-card cyan">
+                        <div class="flex items-center justify-between">
+                            <div>
+                                <p class="text-xs opacity-80">Users</p>
+                                <p id="totalUsers" class="stat-number mt-1">0</p>
+                            </div>
+                            <i class="fas fa-users-cog text-3xl opacity-30"></i>
+                        </div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="flex items-center justify-between">
+                            <div>
+                                <p class="text-xs opacity-80">Active Now</p>
+                                <p id="activeSessionsCount" class="stat-number mt-1">0</p>
+                            </div>
+                            <i class="fas fa-circle text-xl text-green-400 animate-pulse"></i>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- System Info -->
+                <div class="grid grid-cols-1 lg:grid-cols-2 gap-5">
+                    <div class="card">
+                        <h3 class="text-lg font-semibold mb-4 flex items-center gap-2">
+                            <i class="fas fa-info-circle text-emerald-400"></i>
+                            System Information
+                        </h3>
+                        <div class="space-y-2">
+                            <div class="flex justify-between py-2 border-b" style="border-color: var(--border-color);">
+                                <span class="text-sm" style="color: var(--text-muted);">Server Address:</span>
+                                <span class="font-mono text-xs" id="serverAddress">http://192.168.1.4:3000</span>
+                            </div>
+                            <div class="flex justify-between py-2 border-b" style="border-color: var(--border-color);">
+                                <span class="text-sm" style="color: var(--text-muted);">System Name:</span>
+                                <span class="font-semibold text-sm">TRAXA Attendance System</span>
+                            </div>
+                            <div class="flex justify-between py-2 border-b" style="border-color: var(--border-color);">
+                                <span class="text-sm" style="color: var(--text-muted);">Current Version:</span>
+                                <span id="versionDisplay" class="font-semibold text-emerald-400 text-sm">v2.0.0</span>
+                            </div>
+                            <div class="flex justify-between py-2 border-b" style="border-color: var(--border-color);">
+                                <span class="text-sm" style="color: var(--text-muted);">Latest Version:</span>
+                                <span id="latestVersion" class="font-semibold text-sm">
+                                    <i class="fas fa-spinner fa-spin"></i> Checking...
+                                </span>
+                            </div>
+                            <div class="flex justify-between py-2 border-b" style="border-color: var(--border-color);">
+                                <span class="text-sm" style="color: var(--text-muted);">Update Status:</span>
+                                <span id="updateStatus" class="px-3 py-1 rounded-full text-xs version-tag">Checking...</span>
+                            </div>
+                            <div class="mt-3">
+                                <button onclick="checkForUpdates()" class="btn-primary px-4 py-2 rounded-lg text-xs">
+                                    <i class="fas fa-sync-alt mr-1"></i> Check for Updates
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="card">
+                        <h3 class="text-lg font-semibold mb-4 flex items-center gap-2">
+                            <i class="fas fa-chart-simple text-emerald-400"></i>
+                            Database Status
+                        </h3>
+                        <div class="space-y-2">
+                            <div class="flex justify-between py-2 border-b" style="border-color: var(--border-color);">
+                                <span class="text-sm" style="color: var(--text-muted);">Database Directory:</span>
+                                <span id="dbDir" class="font-mono text-xs">Loading...</span>
+                            </div>
+                            <div class="flex justify-between py-2 border-b" style="border-color: var(--border-color);">
+                                <span class="text-sm" style="color: var(--text-muted);">JSON Files:</span>
+                                <span id="jsonFilesCount" class="font-semibold text-sm">0</span>
+                            </div>
+                            <div class="flex justify-between py-2 border-b" style="border-color: var(--border-color);">
+                                <span class="text-sm" style="color: var(--text-muted);">Total Records:</span>
+                                <span id="totalRecords" class="font-semibold text-emerald-400 text-sm">0</span>
+                            </div>
+                            <div class="flex justify-between py-2 border-b" style="border-color: var(--border-color);">
+                                <span class="text-sm" style="color: var(--text-muted);">Last Backup:</span>
+                                <span id="lastBackupTime" class="text-xs" style="color: var(--text-muted);">Never</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Active Sessions Section -->
+            <div id="sessionsSection" class="hidden">
+                <div class="flex flex-wrap justify-between items-center gap-3 mb-5">
+                    <div class="flex items-center gap-3">
+                        <h2 class="text-xl font-bold" style="color: var(--text-primary);">Active User Sessions</h2>
+                        <span id="sessionLastUpdate" class="text-xs px-3 py-1 rounded-full" style="background: var(--bg-secondary); color: var(--text-muted);">
+                            <i class="fas fa-clock"></i> Last update: --
+                        </span>
+                    </div>
+                    <div class="flex gap-2">
+                        <span id="liveIndicator" class="px-3 py-2 bg-green-600/20 text-green-400 rounded-lg text-xs flex items-center gap-2">
+                            <i class="fas fa-circle text-[6px] animate-pulse"></i>
+                            Live Updates
+                        </span>
+                        <button onclick="forceLogoutAll()" class="btn-danger px-4 py-2 rounded-lg text-xs font-medium">
+                            <i class="fas fa-sign-out-alt mr-1"></i> Logout All
+                        </button>
+                        <button onclick="refreshAllSessions()" class="bg-emerald-600 hover:bg-emerald-700 px-4 py-2 rounded-lg text-xs font-medium transition">
+                            <i class="fas fa-sync-alt mr-1"></i> Refresh
+                        </button>
+                    </div>
+                </div>
+                <div id="activeSessionsList" class="table-container"></div>
+            </div>
+
+            <!-- Connected Devices Section -->
+            <div id="devicesSection" class="hidden">
+                <div class="flex flex-wrap justify-between items-center gap-3 mb-5">
+                    <h2 class="text-xl font-bold" style="color: var(--text-primary);">Connected Devices</h2>
+                    <div class="flex gap-3">
+                        <span id="deviceCount" class="px-4 py-2 bg-emerald-600/20 text-emerald-400 rounded-lg text-sm">0 Devices</span>
+                        <button onclick="refreshDevices()" class="px-4 py-2 rounded-lg text-sm transition" style="background: var(--bg-secondary);">
+                            <i class="fas fa-sync-alt mr-1"></i> Refresh
+                        </button>
+                    </div>
+                </div>
+                <div id="devicesList" class="table-container"></div>
+            </div>
+
+            <!-- Backup Manager Section -->
+            <div id="backupsSection" class="hidden">
+                <div class="flex flex-wrap justify-between items-center gap-3 mb-5">
+                    <h2 class="text-xl font-bold" style="color: var(--text-primary);">Backup Manager</h2>
+                    <div class="flex gap-2">
+                        <button onclick="runBackupNow()" class="btn-primary px-4 py-2 rounded-lg text-sm">
+                            <i class="fas fa-play mr-1"></i> Run Backup Now
+                        </button>
+                        <button onclick="refreshBackupData()" class="px-4 py-2 rounded-lg text-sm" style="background: var(--bg-secondary);">
+                            <i class="fas fa-sync-alt mr-1"></i> Refresh
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Backup Statistics -->
+                <div class="grid grid-cols-2 md:grid-cols-4 gap-4 mb-6">
+                    <div class="card text-center py-3">
+                        <p class="text-xs" style="color: var(--text-muted);">Total Backups</p>
+                        <p id="backupTotalCount" class="text-2xl font-bold text-emerald-400">0</p>
+                    </div>
+                    <div class="card text-center py-3">
+                        <p class="text-xs" style="color: var(--text-muted);">Auto Backups</p>
+                        <p id="backupAutoCount" class="text-2xl font-bold text-blue-400">0</p>
+                    </div>
+                    <div class="card text-center py-3">
+                        <p class="text-xs" style="color: var(--text-muted);">Manual Backups</p>
+                        <p id="backupManualCount" class="text-2xl font-bold text-purple-400">0</p>
+                    </div>
+                    <div class="card text-center py-3">
+                        <p class="text-xs" style="color: var(--text-muted);">Total Size</p>
+                        <p id="backupTotalSize" class="text-2xl font-bold text-yellow-400">0 MB</p>
+                    </div>
+                </div>
+
+                <!-- Scheduled Backup Section -->
+                <div class="mb-6">
+                    <div class="flex justify-between items-center mb-4">
+                        <h3 class="text-lg font-semibold flex items-center gap-2">
+                            <i class="fas fa-calendar-alt text-emerald-400"></i>
+                            Scheduled Backup
+                        </h3>
+                        <div class="flex items-center gap-3">
+                            <span id="scheduleStatus" class="px-3 py-1 rounded-full text-xs bg-gray-600/20 text-gray-400">
+                                <i class="fas fa-pause-circle mr-1"></i>Disabled
+                            </span>
+                            <button onclick="refreshScheduleStatus()" class="text-gray-400 hover:text-white text-sm">
+                                <i class="fas fa-sync-alt"></i>
+                            </button>
+                        </div>
+                    </div>
+                    
+                    <div class="grid grid-cols-1 lg:grid-cols-2 gap-5">
+                        <!-- Schedule Configuration -->
+                        <div class="card">
+                            <div class="flex items-center justify-between mb-4">
+                                <h4 class="text-sm font-semibold">Configuration</h4>
+                                <label class="relative inline-flex items-center cursor-pointer">
+                                    <input type="checkbox" id="scheduleEnabled" class="sr-only peer" onchange="toggleSchedule()">
+                                    <div class="w-11 h-6 bg-gray-700 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-emerald-600"></div>
+                                    <span class="ml-3 text-sm font-medium">Enable Auto Backup</span>
+                                </label>
+                            </div>
+                            
+                            <div class="space-y-4">
+                                <div>
+                                    <label class="block text-xs mb-1" style="color: var(--text-muted);">Frequency</label>
+                                    <select id="scheduleFrequency" class="w-full px-3 py-2 rounded-lg text-sm border focus:border-emerald-500 focus:outline-none" style="background: var(--input-bg); border-color: var(--border-color);" onchange="updateScheduleFields()">
+                                        <option value="daily">Daily</option>
+                                        <option value="weekly">Weekly</option>
+                                        <option value="monthly">Monthly</option>
+                                    </select>
+                                </div>
+                                
+                                <div>
+                                    <label class="block text-xs mb-1" style="color: var(--text-muted);">Time (24h format)</label>
+                                    <input type="time" id="scheduleTime" value="02:00" class="w-full px-3 py-2 rounded-lg text-sm border focus:border-emerald-500 focus:outline-none" style="background: var(--input-bg); border-color: var(--border-color);">
+                                </div>
+                                
+                                <div id="weeklyDayDiv" class="hidden">
+                                    <label class="block text-xs mb-1" style="color: var(--text-muted);">Day of Week</label>
+                                    <select id="scheduleDayOfWeek" class="w-full px-3 py-2 rounded-lg text-sm border focus:border-emerald-500 focus:outline-none" style="background: var(--input-bg); border-color: var(--border-color);">
+                                        <option value="0">Sunday</option>
+                                        <option value="1">Monday</option>
+                                        <option value="2">Tuesday</option>
+                                        <option value="3">Wednesday</option>
+                                        <option value="4">Thursday</option>
+                                        <option value="5">Friday</option>
+                                        <option value="6">Saturday</option>
+                                    </select>
+                                </div>
+                                
+                                <div id="monthlyDayDiv" class="hidden">
+                                    <label class="block text-xs mb-1" style="color: var(--text-muted);">Day of Month</label>
+                                    <select id="scheduleDayOfMonth" class="w-full px-3 py-2 rounded-lg text-sm border focus:border-emerald-500 focus:outline-none" style="background: var(--input-bg); border-color: var(--border-color);">
+                                        <option value="1">1</option><option value="2">2</option><option value="3">3</option>
+                                        <option value="4">4</option><option value="5">5</option><option value="6">6</option>
+                                        <option value="7">7</option><option value="8">8</option><option value="9">9</option>
+                                        <option value="10">10</option><option value="11">11</option><option value="12">12</option>
+                                        <option value="13">13</option><option value="14">14</option><option value="15">15</option>
+                                        <option value="16">16</option><option value="17">17</option><option value="18">18</option>
+                                        <option value="19">19</option><option value="20">20</option><option value="21">21</option>
+                                        <option value="22">22</option><option value="23">23</option><option value="24">24</option>
+                                        <option value="25">25</option><option value="26">26</option><option value="27">27</option>
+                                        <option value="28">28</option><option value="29">29</option><option value="30">30</option>
+                                        <option value="31">31</option>
+                                    </select>
+                                </div>
+                                
+                                <div>
+                                    <label class="block text-xs mb-1" style="color: var(--text-muted);">Retention (days)</label>
+                                    <input type="number" id="scheduleRetention" value="30" min="1" max="365" class="w-full px-3 py-2 rounded-lg text-sm border focus:border-emerald-500 focus:outline-none" style="background: var(--input-bg); border-color: var(--border-color);">
+                                </div>
+                                
+                                <div class="flex gap-3 pt-2">
+                                    <button onclick="saveScheduleSettings()" class="btn-primary px-4 py-2 rounded-lg text-sm flex-1">
+                                        <i class="fas fa-save mr-1"></i> Save Settings
+                                    </button>
+                                    <button onclick="runBackupNow()" class="bg-emerald-600 hover:bg-emerald-700 px-4 py-2 rounded-lg text-sm flex-1">
+                                        <i class="fas fa-play mr-1"></i> Run Now
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <!-- Schedule Status -->
+                        <div class="card">
+                            <h4 class="text-sm font-semibold mb-4">Schedule Status</h4>
+                            <div class="space-y-3">
+                                <div class="flex justify-between py-2 border-b" style="border-color: var(--border-color);">
+                                    <span class="text-sm" style="color: var(--text-muted);">Status:</span>
+                                    <span id="scheduleRunStatus" class="text-sm">
+                                        <i class="fas fa-spinner fa-spin"></i> Loading...
+                                    </span>
+                                </div>
+                                <div class="flex justify-between py-2 border-b" style="border-color: var(--border-color);">
+                                    <span class="text-sm" style="color: var(--text-muted);">Last Run:</span>
+                                    <span id="scheduleLastRun" class="text-sm" style="color: var(--text-secondary);">Never</span>
+                                </div>
+                                <div class="flex justify-between py-2 border-b" style="border-color: var(--border-color);">
+                                    <span class="text-sm" style="color: var(--text-muted);">Next Run:</span>
+                                    <span id="scheduleNextRun" class="text-sm text-emerald-400">--</span>
+                                </div>
+                                <div class="flex justify-between py-2 border-b" style="border-color: var(--border-color);">
+                                    <span class="text-sm" style="color: var(--text-muted);">Retention:</span>
+                                    <span id="scheduleRetentionDisplay" class="text-sm">30 days</span>
+                                </div>
+                                <div class="mt-3 p-3 rounded-lg" style="background: var(--bg-secondary);">
+                                    <p class="text-xs" style="color: var(--text-muted);">
+                                        <i class="fas fa-info-circle mr-1"></i>
+                                        Auto backups will be created at the scheduled time. Old backups older than retention period are automatically deleted.
+                                    </p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Backup History Table -->
+                <div class="mt-6">
+                    <div class="flex justify-between items-center mb-3">
+                        <h3 class="text-base font-semibold">Backup History</h3>
+                        <div class="flex gap-2">
+                            <input type="text" id="backupSearchInput" placeholder="Search backups..." class="px-3 py-1.5 rounded-lg text-xs border w-48" style="background: var(--input-bg); border-color: var(--border-color);">
+                            <button onclick="filterBackups()" class="px-3 py-1.5 rounded-lg text-xs" style="background: var(--bg-secondary);">
+                                <i class="fas fa-search"></i>
+                            </button>
+                        </div>
+                    </div>
+                    <div id="backupsList" class="table-container"></div>
+                </div>
+            </div>
+            
+            <!-- System Health Section -->
+            <div id="healthSection" class="hidden">
+                <h2 class="text-xl font-bold mb-5" style="color: var(--text-primary);">System Health Check</h2>
+                
+                <div class="grid grid-cols-2 md:grid-cols-4 gap-4 mb-6">
+                    <div class="card text-center py-4">
+                        <i class="fas fa-database text-2xl text-emerald-400 mb-2"></i>
+                        <p class="text-xs" style="color: var(--text-muted);">Database</p>
+                        <p id="dbStatus" class="text-sm font-bold text-green-400">Checking...</p>
+                    </div>
+                    <div class="card text-center py-4">
+                        <i class="fas fa-file-alt text-2xl text-emerald-400 mb-2"></i>
+                        <p class="text-xs" style="color: var(--text-muted);">JSON Files</p>
+                        <p id="healthJsonFiles" class="text-sm font-bold">0</p>
+                    </div>
+                    <div class="card text-center py-4">
+                        <i class="fas fa-chart-line text-2xl text-emerald-400 mb-2"></i>
+                        <p class="text-xs" style="color: var(--text-muted);">API Status</p>
+                        <p id="apiStatus" class="text-sm font-bold text-green-400">Online</p>
+                    </div>
+                    <div class="card text-center py-4">
+                        <i class="fas fa-clock text-2xl text-emerald-400 mb-2"></i>
+                        <p class="text-xs" style="color: var(--text-muted);">Last Check</p>
+                        <p id="lastHealthCheck" class="text-xs">-</p>
+                    </div>
+                </div>
+                
+                <div id="dataTablesStatus" class="table-container"></div>
+            </div>
+
+            <!-- Security Section -->
+            <div id="securitySection" class="hidden">
+                <!-- Header with Stats -->
+                <div class="mb-6">
+                    <div class="flex justify-between items-center mb-4">
+                        <div>
+                            <h2 class="text-2xl font-bold bg-gradient-to-r from-emerald-400 to-blue-400 bg-clip-text text-transparent">
+                                Security Dashboard
+                            </h2>
+                            <p class="text-sm mt-1" style="color: var(--text-muted);">Monitor and manage system security, user locks, and access controls</p>
+                        </div>
+                        <button onclick="refreshAllSecurityData()" class="px-4 py-2 rounded-xl hover:bg-slate-700 transition flex items-center gap-2" style="background: var(--bg-secondary);">
+                            <i class="fas fa-sync-alt text-emerald-400"></i>
+                            <span class="text-sm">Refresh All</span>
+                        </button>
+                    </div>
+                    
+                    <!-- Stats Cards -->
+                    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-4 mb-6">
+                        <div class="bg-gradient-to-br from-red-600/20 to-red-800/20 rounded-xl p-4 border border-red-500/30">
+                            <div class="flex items-center justify-between">
+                                <div>
+                                    <p class="text-gray-400 text-xs">Locked Users</p>
+                                    <p id="lockedUsersCount" class="text-2xl font-bold text-red-400">0</p>
+                                </div>
+                                <i class="fas fa-lock text-3xl text-red-400 opacity-70"></i>
+                            </div>
+                        </div>
+                        <div class="bg-gradient-to-br from-yellow-600/20 to-yellow-800/20 rounded-xl p-4 border border-yellow-500/30">
+                            <div class="flex items-center justify-between">
+                                <div>
+                                    <p class="text-gray-400 text-xs">Failed Attempts</p>
+                                    <p id="failedAttemptsCount" class="text-2xl font-bold text-yellow-400">0</p>
+                                </div>
+                                <i class="fas fa-exclamation-triangle text-3xl text-yellow-400 opacity-70"></i>
+                            </div>
+                        </div>
+                        <div class="bg-gradient-to-br from-emerald-600/20 to-emerald-800/20 rounded-xl p-4 border border-emerald-500/30">
+                            <div class="flex items-center justify-between">
+                                <div>
+                                    <p class="text-gray-400 text-xs">Banned IPs</p>
+                                    <p id="bannedIPsCount" class="text-2xl font-bold text-emerald-400">0</p>
+                                </div>
+                                <i class="fas fa-ban text-3xl text-emerald-400 opacity-70"></i>
+                            </div>
+                        </div>  
+                        <div class="bg-gradient-to-br from-orange-600/20 to-orange-800/20 rounded-xl p-4 border border-orange-500/30">
+                            <div class="flex items-center justify-between">
+                                <div>
+                                    <p class="text-gray-400 text-xs">Weak Passwords</p>
+                                    <p id="weakPasswordsCount" class="text-2xl font-bold text-orange-400">0</p>
+                                </div>
+                                <i class="fas fa-key text-3xl text-orange-400 opacity-70"></i>
+                            </div>
+                        </div>
+                        <div class="bg-gradient-to-br from-blue-600/20 to-blue-800/20 rounded-xl p-4 border border-blue-500/30">
+                            <div class="flex items-center justify-between">
+                                <div>
+                                    <p class="text-gray-400 text-xs">High Risk Users</p>
+                                    <p id="highRiskCount" class="text-2xl font-bold text-blue-400">0</p>
+                                </div>
+                                <i class="fas fa-shield-alt text-3xl text-blue-400 opacity-70"></i>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Tabs Navigation -->
+                <div class="flex flex-wrap gap-2 mb-6 border-b pb-3" style="border-color: var(--border-color);">
+                    <button onclick="showSecurityTab('locked')" id="tabLockedBtn" class="px-5 py-2.5 rounded-xl text-sm font-medium transition-all duration-200 bg-gradient-to-r from-red-600/20 to-red-700/20 text-red-400 border border-red-500/30">
+                        <i class="fas fa-lock mr-2"></i>Locked Users
+                    </button>
+                    <button onclick="showSecurityTab('failed')" id="tabFailedBtn" class="px-5 py-2.5 rounded-xl text-sm font-medium transition-all duration-200 tab-btn-inactive">
+                        <i class="fas fa-history mr-2"></i>Failed Logins
+                    </button>
+                    <button onclick="showSecurityTab('manual-ban')" id="tabManualBanBtn" class="px-5 py-2.5 rounded-xl text-sm font-medium transition-all duration-200 tab-btn-inactive">
+                        <i class="fas fa-ban mr-2"></i>IP Ban List
+                    </button>
+                    <button onclick="showSecurityTab('audit')" id="tabAuditBtn" class="px-5 py-2.5 rounded-xl text-sm font-medium transition-all duration-200 tab-btn-inactive">
+                        <i class="fas fa-list-ul mr-2"></i>Audit Log
+                    </button>
+                    <button onclick="showSecurityTab('passwords')" id="tabPasswordsBtn" class="px-5 py-2.5 rounded-xl text-sm font-medium transition-all duration-200 tab-btn-inactive">
+                        <i class="fas fa-key mr-2"></i>Password Strength
+                    </button>
+                    <button onclick="showSecurityTab('permissions')" id="tabPermissionsBtn" class="px-5 py-2.5 rounded-xl text-sm font-medium transition-all duration-200 tab-btn-inactive">
+                        <i class="fas fa-user-shield mr-2"></i>Permissions Audit
+                    </button>
+                    <button onclick="showSecurityTab('endpoints')" id="tabEndpointsBtn" class="px-5 py-2.5 rounded-xl text-sm font-medium transition-all duration-200 tab-btn-inactive">
+                        <i class="fas fa-chart-line mr-2"></i>API Stats
+                    </button>
+                </div>
+                
+                <!-- ==================== LOCKED USERS TAB ==================== -->
+                <div id="securityTabLocked" class="security-tab-content">
+                    <div class="rounded-2xl border overflow-hidden" style="background: var(--bg-secondary); border-color: var(--border-color);">
+                        <div class="px-6 py-4 border-b" style="border-color: var(--border-color); background: var(--bg-card);">
+                            <div class="flex justify-between items-center">
+                                <div>
+                                    <h3 class="text-lg font-semibold flex items-center gap-2">
+                                        <i class="fas fa-user-lock text-red-400"></i>
+                                        Locked User Accounts
+                                    </h3>
+                                    <p class="text-xs mt-1" style="color: var(--text-muted);">Users locked due to multiple failed login attempts</p>
+                                </div>
+                                <button onclick="loadLockedUsers()" class="text-sm text-emerald-400 hover:text-emerald-300">
+                                    <i class="fas fa-sync-alt mr-1"></i> Refresh
+                                </button>
+                            </div>
+                        </div>
+                        <div id="lockedUsersList" class="p-6">
+                            <div class="flex justify-center py-12">
+                                <div class="spinner"></div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- ==================== FAILED LOGINS TAB ==================== -->
+                <div id="securityTabFailed" class="security-tab-content hidden">
+                    <div class="rounded-2xl border overflow-hidden" style="background: var(--bg-secondary); border-color: var(--border-color);">
+                        <div class="px-6 py-4 border-b" style="border-color: var(--border-color); background: var(--bg-card);">
+                            <div class="flex justify-between items-center">
+                                <div>
+                                    <h3 class="text-lg font-semibold flex items-center gap-2">
+                                        <i class="fas fa-history text-yellow-400"></i>
+                                        Failed Login Attempts
+                                    </h3>
+                                    <p class="text-xs mt-1" style="color: var(--text-muted);">Recent failed authentication attempts</p>
+                                </div>
+                                <button onclick="loadFailedLogins()" class="text-sm text-emerald-400 hover:text-emerald-300">
+                                    <i class="fas fa-sync-alt mr-1"></i> Refresh
+                                </button>
+                            </div>
+                        </div>
+                        <div id="failedLoginsList" class="p-6">
+                            <div class="flex justify-center py-12">
+                                <div class="spinner"></div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- ==================== MANUAL IP BAN TAB ==================== -->
+                <div id="securityTabManualBan" class="security-tab-content hidden">
+                    <div class="rounded-2xl border overflow-hidden" style="background: var(--bg-secondary); border-color: var(--border-color);">
+                        <div class="px-6 py-4 border-b" style="border-color: var(--border-color); background: var(--bg-card);">
+                            <div class="flex justify-between items-center">
+                                <div>
+                                    <h3 class="text-lg font-semibold flex items-center gap-2">
+                                        <i class="fas fa-ban text-red-400"></i>
+                                        IP Ban List
+                                    </h3>
+                                    <p class="text-xs mt-1" style="color: var(--text-muted);">Manually ban IP addresses from accessing the system</p>
+                                </div>
+                                <button onclick="loadManualBannedIPs()" class="text-sm text-emerald-400 hover:text-emerald-300">
+                                    <i class="fas fa-sync-alt mr-1"></i> Refresh
+                                </button>
+                            </div>
+                        </div>
+                        <div class="p-6">
+                            <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                                <!-- Add IP Form -->
+                                <div class="rounded-xl p-4" style="background: var(--bg-card);">
+                                    <h4 class="text-md font-semibold mb-3 text-emerald-400">Add IP to Blacklist</h4>
+                                    <div class="space-y-3">
+                                        <div>
+                                            <label class="block text-xs mb-1" style="color: var(--text-muted);">IP Address</label>
+                                            <input type="text" id="banIpInput" placeholder="e.g., 192.168.1.100" 
+                                                   class="w-full px-3 py-2 rounded-lg text-sm border focus:border-red-500 focus:outline-none" style="background: var(--input-bg); border-color: var(--border-color);">
+                                        </div>
+                                        <div>
+                                            <label class="block text-xs mb-1" style="color: var(--text-muted);">Reason (Optional)</label>
+                                            <input type="text" id="banReasonInput" placeholder="Why is this IP being banned?" 
+                                                   class="w-full px-3 py-2 rounded-lg text-sm border focus:border-red-500 focus:outline-none" style="background: var(--input-bg); border-color: var(--border-color);">
+                                        </div>
+                                        <div class="flex gap-3">
+                                            <button onclick="banIP()" class="flex-1 bg-red-600 hover:bg-red-700 px-4 py-2 rounded-lg text-sm font-semibold transition">
+                                                <i class="fas fa-ban mr-1"></i> Ban IP
+                                            </button>
+                                            <button onclick="banCurrentIP()" class="flex-1 bg-yellow-600 hover:bg-yellow-700 px-4 py-2 rounded-lg text-sm font-semibold transition">
+                                                <i class="fas fa-user-slash mr-1"></i> Ban My IP
+                                            </button>
+                                        </div>
+                                    </div>
+                                </div>
+                                
+                                <!-- Banned IPs List -->
+                                <div class="rounded-xl p-4" style="background: var(--bg-card);">
+                                    <h4 class="text-md font-semibold mb-3 text-red-400">Banned IPs</h4>
+                                    <div id="manualBannedIPsList" class="max-h-80 overflow-y-auto">
+                                        <div class="text-center py-4 text-sm" style="color: var(--text-muted);">
+                                            <i class="fas fa-spinner fa-spin mr-2"></i> Loading...
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                            
+                            <div class="mt-6 p-3 bg-yellow-600/10 rounded-lg border border-yellow-500/30">
+                                <p class="text-xs text-yellow-400">
+                                    <i class="fas fa-info-circle mr-1"></i>
+                                    <strong>Note:</strong> Banned IPs cannot access ANY page in the system until manually unbanned.
+                                </p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- ==================== AUDIT LOG TAB ==================== -->
+                <div id="securityTabAudit" class="security-tab-content hidden">
+                    <div class="rounded-2xl border overflow-hidden" style="background: var(--bg-secondary); border-color: var(--border-color);">
+                        <div class="px-6 py-4 border-b" style="border-color: var(--border-color); background: var(--bg-card);">
+                            <div class="flex justify-between items-center flex-wrap gap-3">
+                                <div>
+                                    <h3 class="text-lg font-semibold flex items-center gap-2">
+                                        <i class="fas fa-list-ul text-blue-400"></i>
+                                        System Audit Log
+                                    </h3>
+                                    <p class="text-xs mt-1" style="color: var(--text-muted);">Complete record of all system activities</p>
+                                </div>
+                                <div class="flex gap-3">
+                                    <input type="text" id="auditUserFilter" placeholder="Filter by user..." 
+                                           class="px-3 py-1.5 rounded-lg text-sm border w-36" style="background: var(--input-bg); border-color: var(--border-color);">
+                                    <select id="auditActionFilter" class="px-3 py-1.5 rounded-lg text-sm border" style="background: var(--input-bg); border-color: var(--border-color);">
+                                        <option value="">All Actions</option>
+                                        <option value="LOGIN_SUCCESS">Login Success</option>
+                                        <option value="LOGIN_FAILED">Login Failed</option>
+                                        <option value="USER_LOCKED">User Locked</option>
+                                        <option value="USER_UNLOCKED">User Unlocked</option>
+                                        <option value="BACKUP_CREATED">Backup Created</option>
+                                        <option value="PASSWORD_UPDATED">Password Updated</option>
+                                        <option value="IP_BANNED">IP Banned</option>
+                                        <option value="IP_UNBANNED">IP Unbanned</option>
+                                    </select>
+                                    <button onclick="loadAuditLogs()" class="px-3 py-1.5 bg-emerald-600/20 hover:bg-emerald-600/40 text-emerald-400 rounded-lg text-sm">
+                                        <i class="fas fa-search mr-1"></i> Filter
+                                    </button>
+                                    <button onclick="resetAuditFilters()" class="px-3 py-1.5 rounded-lg text-sm" style="background: var(--bg-secondary);">
+                                        <i class="fas fa-undo mr-1"></i> Reset
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                        <div id="auditLogsList" class="p-6">
+                            <div class="flex justify-center py-12">
+                                <div class="spinner"></div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- ==================== PASSWORD STRENGTH TAB ==================== -->
+                <div id="securityTabPasswords" class="security-tab-content hidden">
+                    <div class="rounded-2xl border overflow-hidden" style="background: var(--bg-secondary); border-color: var(--border-color);">
+                        <div class="px-6 py-4 border-b" style="border-color: var(--border-color); background: var(--bg-card);">
+                            <div class="flex justify-between items-center">
+                                <div>
+                                    <h3 class="text-lg font-semibold flex items-center gap-2">
+                                        <i class="fas fa-key text-orange-400"></i>
+                                        Password Strength Analysis
+                                    </h3>
+                                    <p class="text-xs mt-1" style="color: var(--text-muted);">Security assessment of user passwords</p>
+                                </div>
+                                <button onclick="loadPasswordStrength()" class="text-sm text-emerald-400 hover:text-emerald-300">
+                                    <i class="fas fa-sync-alt mr-1"></i> Refresh
+                                </button>
+                            </div>
+                        </div>
+                        <div id="passwordStrengthList" class="p-6">
+                            <div class="flex justify-center py-12">
+                                <div class="spinner"></div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- ==================== PERMISSIONS AUDIT TAB ==================== -->
+                <div id="securityTabPermissions" class="security-tab-content hidden">
+                    <div class="rounded-2xl border overflow-hidden" style="background: var(--bg-secondary); border-color: var(--border-color);">
+                        <div class="px-6 py-4 border-b" style="border-color: var(--border-color); background: var(--bg-card);">
+                            <div class="flex justify-between items-center">
+                                <div>
+                                    <h3 class="text-lg font-semibold flex items-center gap-2">
+                                        <i class="fas fa-user-shield text-blue-400"></i>
+                                        Permissions Audit
+                                    </h3>
+                                    <p class="text-xs mt-1" style="color: var(--text-muted);">User permissions and risk assessment</p>
+                                </div>
+                                <button onclick="loadPermissionsAudit()" class="text-sm text-emerald-400 hover:text-emerald-300">
+                                    <i class="fas fa-sync-alt mr-1"></i> Refresh
+                                </button>
+                            </div>
+                        </div>
+                        <div id="permissionsAuditList" class="p-6">
+                            <div class="flex justify-center py-12">
+                                <div class="spinner"></div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- ==================== API STATS TAB ==================== -->
+                <div id="securityTabEndpoints" class="security-tab-content hidden">
+                    <div class="rounded-2xl border overflow-hidden" style="background: var(--bg-secondary); border-color: var(--border-color);">
+                        <div class="px-6 py-4 border-b" style="border-color: var(--border-color); background: var(--bg-card);">
+                            <div class="flex justify-between items-center">
+                                <div>
+                                    <h3 class="text-lg font-semibold flex items-center gap-2">
+                                        <i class="fas fa-chart-line text-emerald-400"></i>
+                                        API Endpoint Statistics
+                                    </h3>
+                                    <p class="text-xs mt-1" style="color: var(--text-muted);">Request counts and usage patterns</p>
+                                </div>
+                                <button onclick="loadEndpointStats()" class="text-sm text-emerald-400 hover:text-emerald-300">
+                                    <i class="fas fa-sync-alt mr-1"></i> Refresh
+                                </button>
+                            </div>
+                        </div>
+                        <div id="endpointsStatsList" class="p-6">
+                            <div class="flex justify-center py-12">
+                                <div class="spinner"></div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Unlock User Modal -->
+            <div id="unlockUserModal" class="fixed inset-0 bg-black/80 backdrop-blur-sm flex items-center justify-center z-50 hidden transition-all duration-300">
+                <div class="bg-gradient-to-br from-slate-800 to-slate-900 rounded-2xl w-full max-w-md p-0 border border-emerald-500/30 shadow-2xl transform transition-all duration-300 scale-95">
+                    <div class="bg-gradient-to-r from-emerald-600/20 to-emerald-500/10 rounded-t-2xl p-5 border-b border-emerald-500/30">
+                        <div class="flex justify-between items-center">
+                            <div class="flex items-center gap-3">
+                                <div class="w-10 h-10 bg-emerald-600/30 rounded-xl flex items-center justify-center">
+                                    <i class="fas fa-unlock-alt text-emerald-400 text-xl"></i>
+                                </div>
+                                <div>
+                                    <h3 class="text-xl font-bold text-white">Unlock User Account</h3>
+                                    <p class="text-xs text-gray-400">Restore access to locked account</p>
+                                </div>
+                            </div>
+                            <button onclick="closeUnlockModal()" class="text-gray-400 hover:text-white text-2xl transition">&times;</button>
+                        </div>
+                    </div>
+                    
+                    <div class="p-6">
+                        <div id="unlockUserInfo" class="mb-6 p-4 bg-slate-800/80 rounded-xl border border-white/10">
+                            <div class="flex items-center gap-3">
+                                <div class="w-10 h-10 bg-red-600/20 rounded-full flex items-center justify-center">
+                                    <i class="fas fa-user-lock text-red-400"></i>
+                                </div>
+                                <div>
+                                    <p id="unlockUsername" class="font-bold text-lg text-white"></p>
+                                    <p id="unlockUserDetails" class="text-xs text-gray-400 mt-1"></p>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div class="mb-5">
+                            <p class="text-sm font-medium text-gray-300 mb-3">Unlock Options:</p>
+                            <div class="space-y-3">
+                                <label class="flex items-center gap-3 p-3 bg-slate-800/50 rounded-xl cursor-pointer hover:bg-slate-700/50 transition">
+                                    <input type="radio" name="unlockOption" value="keep" checked class="w-4 h-4 accent-emerald-500">
+                                    <div>
+                                        <span class="text-sm font-medium">Keep current password</span>
+                                        <p class="text-xs text-gray-500">User will log in with their existing password</p>
+                                    </div>
+                                </label>
+                                <label class="flex items-center gap-3 p-3 bg-slate-800/50 rounded-xl cursor-pointer hover:bg-slate-700/50 transition">
+                                    <input type="radio" name="unlockOption" value="new" class="w-4 h-4 accent-emerald-500">
+                                    <div>
+                                        <span class="text-sm font-medium">Set new password</span>
+                                        <p class="text-xs text-gray-500">Reset password and unlock account</p>
+                                    </div>
+                                </label>
+                            </div>
+                        </div>
+                        
+                        <div id="newPasswordDiv" class="hidden mb-4 space-y-3">
+                            <div>
+                                <label class="block text-sm font-medium text-gray-300 mb-1">New Password</label>
+                                <div class="relative">
+                                    <input type="password" id="unlockNewPassword" 
+                                           class="w-full px-4 py-2.5 bg-slate-800 rounded-xl text-sm border border-white/10 focus:border-emerald-500 focus:outline-none transition pr-10">
+                                    <button type="button" onclick="togglePasswordVisibility('unlockNewPassword')" 
+                                            class="absolute right-3 top-2.5 text-gray-400 hover:text-white">
+                                        <i class="fas fa-eye"></i>
+                                    </button>
+                                </div>
+                                <p class="text-xs text-gray-500 mt-1">Minimum 4 characters</p>
+                            </div>
+                            <div>
+                                <label class="block text-sm font-medium text-gray-300 mb-1">Confirm New Password</label>
+                                <input type="password" id="unlockConfirmPassword" 
+                                       class="w-full px-4 py-2.5 bg-slate-800 rounded-xl text-sm border border-white/10 focus:border-emerald-500 focus:outline-none">
+                            </div>
+                        </div>
+                        
+                        <div class="flex gap-3 mt-6 pt-4 border-t border-white/10">
+                            <button onclick="confirmUnlockUser()" class="flex-1 bg-gradient-to-r from-emerald-600 to-green-600 hover:from-emerald-500 hover:to-green-500 py-2.5 rounded-xl text-sm font-semibold transition-all duration-200 flex items-center justify-center gap-2">
+                                <i class="fas fa-unlock-alt"></i>
+                                <span>Unlock Account</span>
+                            </button>
+                            <button onclick="closeUnlockModal()" class="flex-1 bg-slate-700 hover:bg-slate-600 py-2.5 rounded-xl text-sm font-semibold transition">
+                                Cancel
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Rate Limits Section -->
+            <div id="rate-limitSection" class="hidden">
+                <div class="flex justify-between items-center mb-5">
+                    <div>
+                        <h2 class="text-xl font-bold">API Rate Limits</h2>
+                        <p class="text-xs mt-1" style="color: var(--text-muted);">Configure request limits for all API endpoints</p>
+                    </div>
+                    <button onclick="loadRateLimitData()" class="bg-emerald-600 hover:bg-emerald-700 px-4 py-2 rounded-lg text-sm">
+                        <i class="fas fa-sync-alt mr-1"></i> Refresh
+                    </button>
+                </div>
+                
+                <!-- Current Stats -->
+                <div class="grid grid-cols-2 md:grid-cols-4 gap-4 mb-5">
+                    <div class="card text-center py-3">
+                        <p class="text-xs" style="color: var(--text-muted);">Active Limiters</p>
+                        <p id="activeLimitersCount" class="text-2xl font-bold text-emerald-400">0</p>
+                    </div>
+                    <div class="card text-center py-3">
+                        <p class="text-xs" style="color: var(--text-muted);">Total Configs</p>
+                        <p id="totalConfigsCount" class="text-2xl font-bold text-blue-400">7</p>
+                    </div>
+                    <div class="card text-center py-3">
+                        <p class="text-xs" style="color: var(--text-muted);">Disabled Limiters</p>
+                        <p id="disabledLimitersCount" class="text-2xl font-bold text-orange-400">0</p>
+                    </div>
+                    <div class="card text-center py-3">
+                        <p class="text-xs" style="color: var(--text-muted);">Last Updated</p>
+                        <p id="lastRateLimitUpdate" class="text-xs" style="color: var(--text-muted);">--</p>
+                    </div>
+                </div>
+                
+                <!-- Configuration Cards -->
+                <div class="card">
+                    <h3 class="text-lg font-semibold mb-4 flex items-center gap-2">
+                        <i class="fas fa-sliders-h text-emerald-400"></i>
+                        Rate Limit Configuration
+                    </h3>
+                    <div id="endpointLimits" class="space-y-3"></div>
+                </div>
+                
+                <!-- Global Settings -->
+                <div class="card mt-5">
+                    <h3 class="text-lg font-semibold mb-4 flex items-center gap-2">
+                        <i class="fas fa-globe text-emerald-400"></i>
+                        Global Settings
+                    </h3>
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        <div>
+                            <label class="block text-xs mb-1" style="color: var(--text-muted);">Global Rate Limit Enabled</label>
+                            <select id="globalRateLimitEnabled" class="w-full px-3 py-2 rounded-lg text-sm border focus:border-emerald-500 focus:outline-none" style="background: var(--input-bg); border-color: var(--border-color);"
+                                    onchange="toggleAllRateLimits(this.value === 'true')">
+                                <option value="true">Enabled</option>
+                                <option value="false">Disabled</option>
+                            </select>
+                            <p class="text-xs mt-1" style="color: var(--text-muted);">Disable all rate limits at once</p>
+                        </div>
+                        <div>
+                            <label class="block text-xs mb-1" style="color: var(--text-muted);">Default Limit (requests)</label>
+                            <input type="number" id="defaultMaxLimit" value="200" 
+                                   class="w-full px-3 py-2 rounded-lg text-sm border focus:border-emerald-500 focus:outline-none" style="background: var(--input-bg); border-color: var(--border-color);">
+                            <p class="text-xs mt-1" style="color: var(--text-muted);">Default value for new limiters</p>
+                        </div>
+                    </div>
+                </div>
+                
+                <div id="rateLimitStats" class="mt-5"></div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Toast Notification -->
+    <div id="toast" class="fixed bottom-6 right-6 z-50 hidden">
+        <div class="px-5 py-3 rounded-xl shadow-2xl flex items-center gap-3 toast">
+            <i id="toastIcon" class="text-xl"></i>
+            <span id="toastMessage" class="text-sm"></span>
+        </div>
+    </div>
+
+    <script src="dashboard.js"></script>
+    <script>
+        // ============================================
+        // PROFESSIONAL THEME TOGGLE (Light/Dark Mode)
+        // ============================================
+        const themeToggleBtn = document.getElementById('themeToggleBtn');
+        const body = document.body;
+        
+        // Check for saved theme preference
+        const savedTheme = localStorage.getItem('adminTheme');
+        if (savedTheme === 'dark') {
+            body.classList.remove('light-mode');
+            body.classList.add('dark-mode');
+        } else {
+            body.classList.add('light-mode');
+            body.classList.remove('dark-mode');
+        }
+        
+        // Theme toggle event with animation
+        if (themeToggleBtn) {
+            themeToggleBtn.addEventListener('click', function() {
+                // Add ripple effect
+                this.style.transform = 'scale(0.97)';
+                setTimeout(() => {
+                    this.style.transform = '';
+                }, 150);
+                
+                if (body.classList.contains('light-mode')) {
+                    body.classList.remove('light-mode');
+                    body.classList.add('dark-mode');
+                    localStorage.setItem('adminTheme', 'dark');
+                    if (typeof showToast === 'function') {
+                        showToast('🌙 Dark mode activated', 'success');
+                    }
+                } else {
+                    body.classList.remove('dark-mode');
+                    body.classList.add('light-mode');
+                    localStorage.setItem('adminTheme', 'light');
+                    if (typeof showToast === 'function') {
+                        showToast('☀️ Light mode activated', 'success');
+                    }
+                }
+            });
+        }
+        
+        // Update date time function
+        function updateDateTime() {
+            const now = new Date();
+            const formatted = now.toLocaleString('en-US', {
+                weekday: 'long',
+                year: 'numeric',
+                month: 'long',
+                day: 'numeric',
+                hour: '2-digit',
+                minute: '2-digit',
+                second: '2-digit'
+            });
+            const dateTimeElement = document.getElementById('currentDateTime');
+            if (dateTimeElement) {
+                dateTimeElement.textContent = formatted;
+            }
+        }
+        
+        setInterval(updateDateTime, 1000);
+        updateDateTime();
+    </script>
+</body>
+</html>
