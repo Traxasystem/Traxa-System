@@ -1210,21 +1210,25 @@ app.use(express.static('public'));
 
 // Serve index.html للمسار الرئيسي
 app.get('/', (req, res) => {
-  res.sendFile(path.join(__dirname, 'index.html'));
+  res.sendFile(path.join(__dirname,'public', 'index.html'));
 });
 
 // Serve students.html
 app.get('/students', (req, res) => {
-  res.sendFile(path.join(__dirname, 'students.html'));
+  res.sendFile(path.join(__dirname,'public', 'students.html'));
+});
+
+app.get('/gate.html', (req, res) => {
+    res.sendFile(path.join(__dirname, 'public', 'gate.html'));
 });
 
 // Serve doctor page
 app.get('/doctor', (req, res) => {
-  res.sendFile(path.join(__dirname, 'traxa_doctor_management.html'));
+  res.sendFile(path.join(__dirname,'public', 'traxa_doctor_management.html'));
 });
 // Serve system dashboard
 app.get('/system-dashboard', (req, res) => {
-    res.sendFile(path.join(__dirname, 'system-dashboard.html'));
+    res.sendFile(path.join(__dirname,'public', 'system-dashboard.html'));
 });
 const DB_DIR = path.join(__dirname, 'database');
 const BACKUPS_DIR = path.join(__dirname, 'backups');
@@ -7313,11 +7317,11 @@ app.get('/health', (req, res) => {
 
 // تشغيل HTTP على البورت الأصلي 3000
 app.listen(PORT, '0.0.0.0', () => {
-    console.log(`🌐 HTTP Server running on port ${PORT}`);
-    console.log(`   - http://localhost:${PORT}`);
-    console.log(`   - ${RENDER_URL}`);
+    console.log(`🚀 TRAXA Server is running!`);
+    console.log(`📍 Local: http://localhost:${PORT}`);
+    console.log(`🌍 Public: ${RENDER_URL}`);
+    console.log(`📁 Database: ${path.join(__dirname, 'database')}`);
 });
-
 // Logging middleware
 app.use((req, res, next) => {
   const clientIP = req.headers['x-forwarded-for'] || req.socket.remoteAddress;
