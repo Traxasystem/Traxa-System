@@ -1,0 +1,38 @@
+# Node.js dependencies
+node_modules/
+package-lock.json
+
+# Database (JSON files - مهم جداً!)
+database/*.json
+!database/.gitkeep
+
+# Backups
+backups/
+*.zip
+
+# Temporary files
+temp_uploads/
+temp_*
+*.tmp
+
+# SSL Certificates (لا ترفع الشهادات)
+server.key
+server.crt
+
+# Logs
+logs/
+*.log
+system_logs.json
+
+# OS files
+.DS_Store
+Thumbs.db
+
+# IDE files
+.vscode/
+.idea/
+*.swp
+
+# Environment variables
+.env
+.env.local
