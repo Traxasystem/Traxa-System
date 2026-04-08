@@ -1,0 +1,58 @@
+# اسم الـ workflow
+name: TRAXA Server
+
+# متى يشتغل الـ workflow
+on:
+  # يشتغل كل 15 دقيقة (يبقي السيرفر شغال)
+  schedule:
+    - cron: '*/15 * * * *'
+  # عشان تقدر تشغله يدوياً من GitHub
+  workflow_dispatch:
+
+jobs:
+  run-server:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10  # يشتغل 10 دقائق
+    
+    steps:
+      # 1. تحميل الكود من المستودع
+      - name: Checkout code
+        uses: actions/checkout@v4
+      
+      # 2. تحميل Node.js
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '18.x'
+      
+      # 3. تثبيت الاعتماديات
+      - name: Install dependencies
+        run: npm install
+      
+      # 4. إنشاء مجلدات database و temp_uploads
+      - name: Create required directories
+        run: |
+          mkdir -p database backups temp_uploads
+          # إنشاء ملفات JSON فارغة إذا مش موجودة
+          echo '[]' > database/students.json
+          echo '[]' > database/doctors.json
+          echo '[]' > database/subjects.json
+          echo '[]' > database/lectures.json
+          echo '[]' > database/users.json
+          echo '[]' > database/grades.json
+          echo '[]' > database/attendance.json
+          echo '[]' > database/recyclebin.json
+      
+      # 5. تشغيل السيرفر
+      - name: Start server
+        run: |
+          node server.js &
+          sleep 5
+      
+      # 6. فحص إن كان السيرفر شغال
+      - name: Check server
+        run: curl -f http://localhost:3000/health || exit 1
+      
+      # 7. يفضل السيرفر شغال 5 دقائق
+      - name: Keep alive
+        run: sleep 300
