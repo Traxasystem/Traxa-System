@@ -1,0 +1,48 @@
+[
+  {
+    "id": 101,
+    "name": "Hebat Al-Rahman Hassan",
+    "username": "heba_ta",
+    "password": "$2b$10$9PlkuSj/LMu1nCS5uiPNyubVVHKmJZzbZBxt4KzzTh0jO5om2K0nm",
+    "email": "heba.hassan@university.edu",
+    "supervisor_doctor_id": 1,
+    "supervisor_doctor_name": "Dr. Ghada EL Taweel"
+  },
+  {
+    "id": 102,
+    "name": "Fayza Al-Shourbagy",
+    "username": "fayza_ta",
+    "password": "$2b$10$g2X78ihKyalK393PXb3lK.6E2H5opYep/m0XPB3roVbO/KOwYo65K",
+    "email": "fayza.shourbagy@university.edu",
+    "supervisor_doctor_id": 2,
+    "supervisor_doctor_name": "Dr. Mohamed Miad",
+    "confirmationComment": "gg"
+  },
+  {
+    "id": 103,
+    "name": "Mostafa El-Khouly",
+    "username": "mostafa_ta",
+    "password": "$2b$10$9PlkuSj/LMu1nCS5uiPNyubVVHKmJZzbZBxt4KzzTh0jO5om2K0nm",
+    "email": "mostafa.khouly@university.edu",
+    "supervisor_doctor_id": 3,
+    "supervisor_doctor_name": "Dr. Marwa Mohamed"
+  },
+  {
+    "id": 104,
+    "name": "Ismail Mohamed",
+    "username": "ismail_ta",
+    "password": "$2b$10$9PlkuSj/LMu1nCS5uiPNyubVVHKmJZzbZBxt4KzzTh0jO5om2K0nm",
+    "email": "ismail.mohamed@university.edu",
+    "supervisor_doctor_id": 4,
+    "supervisor_doctor_name": "Dr. Jihad Mohamed"
+  },
+  {
+    "id": 105,
+    "name": "Shorouk Mohamed",
+    "username": "shorouk_ta",
+    "password": "$2b$10$9PlkuSj/LMu1nCS5uiPNyubVVHKmJZzbZBxt4KzzTh0jO5om2K0nm",
+    "email": "shorouk.mohamed@university.edu",
+    "supervisor_doctor_id": 5,
+    "supervisor_doctor_name": "Dr. Hassan El Mahdy"
+  }
+]

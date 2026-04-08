@@ -1,0 +1,11 @@
+{
+  "enabled": true,
+  "frequency": "daily",
+  "time": "13:00",
+  "dayOfWeek": 0,
+  "dayOfMonth": 1,
+  "lastRun": "2026-04-05T11:00:30.166Z",
+  "retentionDays": 30,
+  "status": "idle",
+  "lastError": null
+}

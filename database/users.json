@@ -1,0 +1,47 @@
+[
+  {
+    "id": 1,
+    "username": "admin",
+    "password": "$2b$10$u9lhrd520RJpWjeTBurtRe3YMveqQMxXps5rT0Tt.GSH6phIupJM2",
+    "role": "admin"
+  },
+  {
+    "id": 2,
+    "username": "it",
+    "password": "$2b$10$u9lhrd520RJpWjeTBurtReBVklTMfDh7jCoDJArkrdG3K3c2sCELG",
+    "role": "it"
+  },
+  {
+    "id": 3,
+    "username": "mng",
+    "password": "$2b$10$u9lhrd520RJpWjeTBurtReU5hEf7MTIbVuOSkrTopky43lUgujWh2",
+    "role": "mng"
+  },
+  {
+    "id": 4,
+    "username": "emp",
+    "password": "$2b$10$u9lhrd520RJpWjeTBurtRe5HCesN4GWa3bmq8Ar9VHgKoeG7niRH2",
+    "role": "emp",
+    "permissions": {
+      "nav.students": true,
+      "nav.doctors": true,
+      "nav.subjects": true,
+      "nav.lectures": true,
+      "nav.reports": true,
+      "btn.students.add": true,
+      "btn.students.edit": true,
+      "btn.doctors.edit": true,
+      "btn.teaching-assistants.view": false,
+      "btn.teaching-assistants.add": false,
+      "btn.teaching-assistants.delete": false,
+      "btn.subjects.edit": true,
+      "btn.lectures.edit": true
+    }
+  },
+  {
+    "id": 5,
+    "username": "dev",
+    "password": "$2b$10$u9lhrd520RJpWjeTBurtRemarjC5waORmyBfIoBMigk4yzPw3Nl9a",
+    "role": "admin"
+  }
+]

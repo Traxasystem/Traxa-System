@@ -1,0 +1,30 @@
+[ 
+  {
+    "id": 1,
+    "name": "General"
+  },
+  {
+    "id": 2,
+    "name": "Computer Science"
+  },
+  {
+    "id": 3,
+    "name": "Information Systems"
+  },
+  {
+    "id": 4,
+    "name": "Cyber Security"
+  },
+  {
+    "id": 5,
+    "name": "Software Engineering"
+  },
+  {
+    "id": 6,
+    "name": "Artificial Intelligence"
+  },
+  {
+    "id":7,
+    "name": "Bioinformatics"
+  }
+]

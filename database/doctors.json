@@ -1,0 +1,39 @@
+[
+  {
+    "id": 1,
+    "name": "Dr. Ghada EL Taweel",
+    "username": "ghada_doc",
+    "password": "$2b$10$Yna3Cy3Gj/rtmscOHVB1qeGSpBN0MFJIvyH1Xm6mmMTgDakSuZOey",
+    "email": "ghada@university.edu",
+    "confirmationComment": "tsrt"
+  },
+  {
+    "id": 2,
+    "name": "Dr. Mohamed Miad",
+    "username": "miad_doc",
+    "password": "$2b$10$Yna3Cy3Gj/rtmscOHVB1qeEvl5oG8vB2PyK/n1YVity0RhmmTJdwK",
+    "email": "miad@university.edu",
+    "confirmationComment": "dkdk"
+  },
+  {
+    "id": 3,
+    "name": "Dr. Marwa Mohamed",
+    "username": "marwa_doc",
+    "password": "$2b$10$Yna3Cy3Gj/rtmscOHVB1qeEvl5oG8vB2PyK/n1YVity0RhmmTJdwK",
+    "email": "marwa@university.edu"
+  },
+  {
+    "id": 4,
+    "name": "Dr. Jihad Mohamed",
+    "username": "jihad_doc",
+    "password": "$2b$10$Yna3Cy3Gj/rtmscOHVB1qeW9Jk9FXmpppPNmpwSiwvpyLhCm92Om.",
+    "email": "jihad@university.edu"
+  },
+  {
+    "id": 5,
+    "name": "Dr. Hassan El Mahdy",
+    "username": "hassan_doc",
+    "password": "$2b$10$Yna3Cy3Gj/rtmscOHVB1qeW9Jk9FXmpppPNmpwSiwvpyLhCm92Om.",
+    "email": "hassan@university.edu"
+  }
+]

@@ -1,0 +1,15 @@
+[
+  {"id": 1, "name": "Lab 1A", "type": "Lab"},
+  {"id": 2, "name": "Lab 1B", "type": "Lab"},
+  {"id": 3, "name": "Lab 2A", "type": "Lab"},
+  {"id": 4, "name": "Lab 2B", "type": "Lab"},
+  {"id": 5, "name": "Lab 3A", "type": "Lab"},
+  {"id": 6, "name": "Lab 3B", "type": "Lab"},
+
+  {"id": 7, "name": "Room 1A", "type": "Room"},
+  {"id": 8, "name": "Room 1B", "type": "Room"},
+  {"id": 9, "name": "Room 2A", "type": "Room"},
+  {"id": 10, "name": "Room 2B", "type": "Room"},
+  {"id": 11, "name": "Room 3A", "type": "Room"},
+  {"id": 12, "name": "Room 3B", "type": "Room"}
+]

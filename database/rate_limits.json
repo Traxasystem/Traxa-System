@@ -1,0 +1,37 @@
+{
+  "general": {
+    "windowMs": 900000,
+    "max": 200,
+    "enabled": false
+  },
+  "login": {
+    "windowMs": 900000,
+    "max": 10,
+    "enabled": false
+  },
+  "api": {
+    "windowMs": 300000,
+    "max": 50,
+    "enabled": false
+  },
+  "backup": {
+    "windowMs": 3600000,
+    "max": 5,
+    "enabled": false
+  },
+  "restore": {
+    "windowMs": 3600000,
+    "max": 2,
+    "enabled": false
+  },
+  "student": {
+    "windowMs": 900000,
+    "max": 300,
+    "enabled": false
+  },
+  "doctor": {
+    "windowMs": 900000,
+    "max": 150,
+    "enabled": false
+  }
+}

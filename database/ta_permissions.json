@@ -1,0 +1,40 @@
+[
+  {
+    "taId": 102,
+    "permissions": {
+      "ta.nav.overview": false,
+      "ta.nav.subjects": true,
+      "ta.nav.lectures": true,
+      "ta.nav.attendance": false,
+      "ta.nav.reports": false,
+      "ta.nav.grading": true,
+      "ta.attendance.start": true,
+      "ta.attendance.end": true,
+      "ta.grades.view": true,
+      "ta.reports.view": false,
+      "ta.reports.export": false
+    },
+    "updatedAt": "2026-03-23T15:23:21.291Z",
+    "id": 1,
+    "createdAt": "2026-03-23T15:03:53.633Z"
+  },
+  {
+    "taId": 101,
+    "permissions": {
+      "ta.nav.overview": true,
+      "ta.nav.subjects": false,
+      "ta.nav.lectures": true,
+      "ta.nav.attendance": false,
+      "ta.nav.reports": true,
+      "ta.nav.grading": false,
+      "ta.attendance.start": false,
+      "ta.attendance.end": false,
+      "ta.grades.view": true,
+      "ta.reports.view": false,
+      "ta.reports.export": false
+    },
+    "updatedAt": "2026-03-23T17:43:21.039Z",
+    "id": 2,
+    "createdAt": "2026-03-23T17:43:21.025Z"
+  }
+]
